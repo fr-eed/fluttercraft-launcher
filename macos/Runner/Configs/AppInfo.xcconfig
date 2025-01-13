@@ -11,4 +11,4 @@ PRODUCT_NAME = FluttCraft Launcher
 PRODUCT_BUNDLE_IDENTIFIER = com.example.material3Demo
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2025 FluttCraft Launcher. All rights reserved.
+PRODUCT_COPYRIGHT = FluttCraft Launcher
