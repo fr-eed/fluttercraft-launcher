@@ -1,0 +1,32 @@
+name: fluttcraft_launcher
+description:
+  A flutter implementation of Minecraft Launcher.
+
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.0
+
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.2
+  url_launcher: ^6.1.8
+  window_manager: ^0.4.3
+
+dev_dependencies:
+  analysis_defaults:
+    path: analysis_defaults
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
