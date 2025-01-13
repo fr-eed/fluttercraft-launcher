@@ -324,33 +324,14 @@ class _ExpandedTrailingActions extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Text('Brightness'),
+              const Text('Dark Mode'),
               Expanded(child: Container()),
               Switch(
-                  value: useLightMode,
+                  value: !useLightMode,
                   onChanged: (value) {
-                    handleBrightnessChange(value);
+                    handleBrightnessChange(!value);
                   })
             ],
-          ),
-          Row(
-            children: [
-              useMaterial3
-                  ? const Text('Material 3')
-                  : const Text('Material 2'),
-              Expanded(child: Container()),
-              Switch(
-                  value: useMaterial3,
-                  onChanged: (_) {
-                    handleMaterialVersionChange();
-                  })
-            ],
-          ),
-          const Divider(),
-          _ExpandedColorSeedAction(
-            handleColorSelect: handleColorSelect,
-            colorSelected: colorSelected,
-            colorSelectionMethod: colorSelectionMethod,
           ),
           const Divider(),
           _ExpandedImageColorAction(
@@ -364,42 +345,6 @@ class _ExpandedTrailingActions extends StatelessWidget {
     return screenHeight > 740
         ? trailingActionsBody
         : SingleChildScrollView(child: trailingActionsBody);
-  }
-}
-
-class _ExpandedColorSeedAction extends StatelessWidget {
-  const _ExpandedColorSeedAction({
-    required this.handleColorSelect,
-    required this.colorSelected,
-    required this.colorSelectionMethod,
-  });
-
-  final void Function(int) handleColorSelect;
-  final ColorSeed colorSelected;
-  final ColorSelectionMethod colorSelectionMethod;
-
-  @override
-  Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxHeight: 200.0),
-      child: GridView.count(
-        crossAxisCount: 3,
-        children: List.generate(
-          ColorSeed.values.length,
-          (i) => IconButton(
-            icon: const Icon(Icons.radio_button_unchecked),
-            color: ColorSeed.values[i].color,
-            isSelected: colorSelected.color == ColorSeed.values[i].color &&
-                colorSelectionMethod == ColorSelectionMethod.colorSeed,
-            selectedIcon: const Icon(Icons.circle),
-            onPressed: () {
-              handleColorSelect(i);
-            },
-            tooltip: ColorSeed.values[i].label,
-          ),
-        ),
-      ),
-    );
   }
 }
 
@@ -421,7 +366,11 @@ class _ExpandedImageColorAction extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: GridView.count(
-          crossAxisCount: 3,
+          crossAxisCount: ColorImageProvider.values.length < 3
+              ? ColorImageProvider.values.length
+              : 3,
+          scrollDirection: Axis.vertical,
+          physics: const NeverScrollableScrollPhysics(),
           children: List.generate(
             ColorImageProvider.values.length,
             (i) => Tooltip(
@@ -443,6 +392,7 @@ class _ExpandedImageColorAction extends StatelessWidget {
                         borderRadius: BorderRadius.circular(4.0),
                         child: Image(
                           image: AssetImage(ColorImageProvider.values[i].path),
+                          fit: BoxFit.cover,
                         ),
                       ),
                     ),
