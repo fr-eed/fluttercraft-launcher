@@ -8,41 +8,39 @@ class PlayScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: CustomScrollView(
-        physics: const NeverScrollableScrollPhysics(),
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.all(16.0),
-            sliver: SliverToBoxAdapter(
-              child: Container(
-                height: 300,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16.0),
-                  image: DecorationImage(
-                    image: AssetImage(imageSelected.path),
-                    fit: BoxFit.fitWidth,
-                    isAntiAlias: false,
-                  ),
+    return CustomScrollView(
+      physics: const NeverScrollableScrollPhysics(),
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16.0),
+          sliver: SliverToBoxAdapter(
+            child: Container(
+              height: 300,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16.0),
+                image: DecorationImage(
+                  image: AssetImage(imageSelected.path),
+                  fit: BoxFit.fitWidth,
+                  isAntiAlias: false,
                 ),
               ),
             ),
           ),
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                FloatingActionButton.extended(
-                  onPressed: () {},
-                  label: const Text('Launch'),
-                ),
-              ],
-            ),
+        ),
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              FloatingActionButton.extended(
+                onPressed: () {},
+                label: const Text('Launch'),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
