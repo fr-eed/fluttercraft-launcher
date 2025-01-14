@@ -1,6 +1,5 @@
 name: fluttcraft_launcher
-description:
-  A flutter implementation of Minecraft Launcher.
+description: A flutter implementation of Minecraft Launcher.
 
 publish_to: "none"
 
@@ -8,7 +7,6 @@ version: 1.0.0+1
 
 environment:
   sdk: ^3.5.0
-
 
 dependencies:
   flutter:
@@ -18,6 +16,8 @@ dependencies:
   url_launcher: ^6.1.8
   window_manager: ^0.4.3
   json_annotation: ^4.9.0
+  go_router: ^14.6.3
+  flutter_bloc: ^9.0.0
 
 dev_dependencies:
   analysis_defaults:

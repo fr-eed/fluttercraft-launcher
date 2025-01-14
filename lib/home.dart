@@ -5,223 +5,138 @@
 import 'package:fluttcraft_launcher/screens/play_screen.dart';
 import 'package:fluttcraft_launcher/ui/navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'cubits/settings_cubit.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'constants.dart';
 
 class Home extends StatefulWidget {
+  final Widget child;
+  final int index;
+
   const Home({
     super.key,
-    required this.useLightMode,
-    required this.useMaterial3,
-    required this.colorSelected,
-    required this.handleBrightnessChange,
-    required this.handleMaterialVersionChange,
-    required this.handleColorSelect,
-    required this.handleImageSelect,
-    required this.colorSelectionMethod,
-    required this.imageSelected,
+    required this.child,
+    required this.index,
   });
-
-  final bool useLightMode;
-  final bool useMaterial3;
-  final ColorSeed colorSelected;
-  final ColorImageProvider imageSelected;
-  final ColorSelectionMethod colorSelectionMethod;
-
-  final void Function(bool useLightMode) handleBrightnessChange;
-  final void Function() handleMaterialVersionChange;
-  final void Function(int value) handleColorSelect;
-  final void Function(int value) handleImageSelect;
 
   @override
   State<Home> createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
-  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-  late final AnimationController controller;
-  late final CurvedAnimation railAnimation;
-  bool controllerInitialized = false;
-  bool showMediumSizeLayout = false;
-  bool showLargeSizeLayout = false;
-
-  int screenIndex = ScreenSelected.play.value;
+class _HomeState extends State<Home> {
+  late int _selectedIndex;
 
   @override
-  initState() {
+  void initState() {
     super.initState();
-    controller = AnimationController(
-      duration: Duration(milliseconds: transitionLength.toInt() * 2),
-      value: 0,
-      vsync: this,
-    );
-    railAnimation = CurvedAnimation(
-      parent: controller,
-      curve: const Interval(0.5, 1.0),
-    );
+    _selectedIndex = widget.index;
   }
-
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    final double width = MediaQuery.of(context).size.width;
-    final AnimationStatus status = controller.status;
-    if (width > mediumWidthBreakpoint) {
-      if (width > largeWidthBreakpoint) {
-        showMediumSizeLayout = false;
-        showLargeSizeLayout = true;
-      } else {
-        showMediumSizeLayout = true;
-        showLargeSizeLayout = false;
-      }
-      if (status != AnimationStatus.forward &&
-          status != AnimationStatus.completed) {
-        controller.forward();
-      }
-    } else {
-      showMediumSizeLayout = false;
-      showLargeSizeLayout = false;
-      if (status != AnimationStatus.reverse &&
-          status != AnimationStatus.dismissed) {
-        controller.reverse();
-      }
-    }
-    if (!controllerInitialized) {
-      controllerInitialized = true;
-      controller.value = width > mediumWidthBreakpoint ? 1 : 0;
-    }
-  }
-
-  void handleScreenChanged(int screenSelected) {
-    setState(() {
-      screenIndex = screenSelected;
-    });
-  }
-
-  Widget createScreenFor(
-    ScreenSelected screenSelected,
-    bool showNavBarExample,
-  ) =>
-      switch (screenSelected) {
-        ScreenSelected.play => PlayScreen(imageSelected: widget.imageSelected),
-        ScreenSelected.instances => Container(),
-        ScreenSelected.settings => Container(),
-      };
-
-  PreferredSizeWidget createAppBar() {
-    return AppBar(
-      title: widget.useMaterial3
-          ? const Text('FluttCraft Launcher')
-          : const Text('FluttCraft Launcher (Material 2)'),
-      actions: [Container()],
-    );
-  }
-
-  Widget _trailingActions() => Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Flexible(
-            child: _BrightnessButton(
-              handleBrightnessChange: widget.handleBrightnessChange,
-              showTooltipBelow: false,
-            ),
-          ),
-          Flexible(
-            child: _ColorImageButton(
-              handleImageSelect: widget.handleImageSelect,
-              imageSelected: widget.imageSelected,
-              colorSelectionMethod: widget.colorSelectionMethod,
-            ),
-          ),
-        ],
-      );
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (context, child) {
-        return NavigationTransition(
-          scaffoldKey: scaffoldKey,
-          animationController: controller,
-          railAnimation: railAnimation,
-          appBar: createAppBar(),
-          body: createScreenFor(
-              ScreenSelected.values[screenIndex], controller.value == 1),
-          navigationRail: NavigationRail(
-            extended: showLargeSizeLayout,
-            destinations: navRailDestinations,
-            selectedIndex: screenIndex,
+    return Scaffold(
+      appBar: AppBar(),
+      body: Row(
+        children: [
+          NavigationRail(
+            labelType: NavigationRailLabelType.all,
             onDestinationSelected: (index) {
               setState(() {
-                screenIndex = index;
-                handleScreenChanged(screenIndex);
+                _selectedIndex = index;
               });
+              switch (index) {
+                case 0:
+                  {
+                    context.go('/home');
+                  }
+
+                case 1:
+                  context.go('/instances');
+              }
             },
+            destinations: const [
+              NavigationRailDestination(
+                icon: Icon(Icons.videogame_asset),
+                label: Text('Home'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.widgets_outlined),
+                label: Text('Instances'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.local_laundry_service),
+                label: Text('Play'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.coffee),
+                label: Text('Play'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.keyboard_option_key),
+                label: Text('Play'),
+              ),
+            ],
+            selectedIndex: _selectedIndex,
             trailing: Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: showLargeSizeLayout
-                    ? _ExpandedTrailingActions(
-                        useLightMode: widget.useLightMode,
-                        handleBrightnessChange: widget.handleBrightnessChange,
-                        useMaterial3: widget.useMaterial3,
-                        handleMaterialVersionChange:
-                            widget.handleMaterialVersionChange,
-                        handleImageSelect: widget.handleImageSelect,
-                        handleColorSelect: widget.handleColorSelect,
-                        colorSelectionMethod: widget.colorSelectionMethod,
-                        imageSelected: widget.imageSelected,
-                        colorSelected: widget.colorSelected,
-                      )
-                    : _trailingActions(),
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: Column(
+                    spacing: 8,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.settings),
+                        onPressed: () {
+                          // Handle settings button press
+                        },
+                      ),
+                      _BrightnessButton(),
+                      IconButton(
+                        icon: const Icon(Icons.info),
+                        onPressed: () {
+                          // Handle info button press
+                        },
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
-          navigationBar: NavigationBars(
-            onSelectItem: (index) {
-              setState(() {
-                screenIndex = index;
-                handleScreenChanged(screenIndex);
-              });
-            },
-            selectedIndex: screenIndex,
-            isExampleBar: false,
-          ),
-        );
-      },
+          Expanded(child: widget.child),
+        ],
+      ),
     );
   }
 }
 
 class _BrightnessButton extends StatelessWidget {
   const _BrightnessButton({
-    required this.handleBrightnessChange,
     this.showTooltipBelow = true,
   });
 
-  final Function handleBrightnessChange;
   final bool showTooltipBelow;
 
   @override
   Widget build(BuildContext context) {
     final isBright = Theme.of(context).brightness == Brightness.light;
-    return Tooltip(
-      preferBelow: showTooltipBelow,
-      message: 'Toggle brightness',
-      child: IconButton(
-        icon: isBright
-            ? const Icon(Icons.dark_mode_outlined)
-            : const Icon(Icons.light_mode_outlined),
-        onPressed: () => handleBrightnessChange(!isBright),
-      ),
+    return BlocBuilder<SettingsCubit, SettingsState>(
+      builder: (context, state) {
+        return Tooltip(
+          preferBelow: showTooltipBelow,
+          message: 'Toggle brightness',
+          child: IconButton(
+            icon: isBright
+                ? const Icon(Icons.dark_mode_outlined)
+                : const Icon(Icons.light_mode_outlined),
+            onPressed: () => context.read<SettingsCubit>().toggleBrightness(),
+          ),
+        );
+      },
     );
   }
 }
