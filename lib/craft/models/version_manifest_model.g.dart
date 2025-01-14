@@ -77,7 +77,7 @@ const _$OsArchEnumMap = {
 
 CraftRulesModel _$CraftRulesModelFromJson(Map<String, dynamic> json) =>
     CraftRulesModel(
-      action: json['action'] as String,
+      action: $enumDecode(_$RuleActionEnumMap, json['action']),
       os: json['os'] == null
           ? null
           : CraftOsModel.fromJson(json['os'] as Map<String, dynamic>),
@@ -89,10 +89,15 @@ CraftRulesModel _$CraftRulesModelFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$CraftRulesModelToJson(CraftRulesModel instance) =>
     <String, dynamic>{
-      'action': instance.action,
+      'action': _$RuleActionEnumMap[instance.action]!,
       'os': instance.os?.toJson(),
       'features': instance.features?.toJson(),
     };
+
+const _$RuleActionEnumMap = {
+  RuleAction.allow: 'allow',
+  RuleAction.disallow: 'disallow',
+};
 
 CraftLibraryModel _$CraftLibraryModelFromJson(Map<String, dynamic> json) =>
     CraftLibraryModel(

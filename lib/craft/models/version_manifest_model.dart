@@ -135,9 +135,14 @@ class CraftFeatureModel {
       };
 }
 
+enum RuleAction {
+  allow,
+  disallow,
+}
+
 @JsonSerializable(explicitToJson: true)
 class CraftRulesModel {
-  final String action;
+  final RuleAction action;
   final CraftOsModel? os;
   final CraftFeatureModel? features;
 
@@ -147,7 +152,7 @@ class CraftRulesModel {
     this.features,
   });
 
-  bool isAllowed({
+  bool _isAllowed({
     required CraftOsModel os,
     required CraftFeatureModel features,
   }) {
@@ -166,6 +171,15 @@ class CraftRulesModel {
       }
     }
     return true;
+  }
+
+  bool isAllowed({
+    required CraftOsModel os,
+    required CraftFeatureModel features,
+  }) {
+    return action == RuleAction.allow
+        ? _isAllowed(os: os, features: features)
+        : !_isAllowed(os: os, features: features);
   }
 
   factory CraftRulesModel.fromJson(Map<String, dynamic> json) =>
