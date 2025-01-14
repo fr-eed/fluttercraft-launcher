@@ -259,6 +259,16 @@ class CraftArgumentsModel {
 @JsonSerializable(explicitToJson: true)
 class CraftVersionManifestModel {
   final String id;
+
+  String get majorVersion {
+    // if contains ., then split and take first 2
+    if (id.contains('.')) {
+      return ('${id.split('.')[0]}.${id.split('.')[1]}'); // 19.1 from 19.1.2
+    } else {
+      return id; // snapshot or something, idk
+    }
+  }
+
   final String mainClass;
   final int minimumLauncherVersion;
   final DateTime releaseTime;

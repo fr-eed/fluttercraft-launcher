@@ -109,8 +109,10 @@ class CraftInstanceLauncher {
       "natives_directory": "$installDir/natives",
       "launcher_name": "FluttCraft Launcher",
       "launcher_version": "1.0.0",
-      // TODO fix assets not loading
+
       "assets_root": "$installDir/assets",
+      "assets_index_name": manifesto
+          .majorVersion, // major is index // will read from assets/index/19.2.json
 
       "version_name": manifesto.id,
       "version_type": manifesto.type,
@@ -118,7 +120,6 @@ class CraftInstanceLauncher {
       // insance
       "game_directory":
           "$installDir/gamedir/instance0", // TODO add uuid or smth
-      "assets_index_name": manifesto.id,
 
       // usr
       "auth_player_name": "FluttCrafter",
@@ -129,23 +130,7 @@ class CraftInstanceLauncher {
       "user_type": "mojang",
     };
 
-    // Generate the Java command with the updated classpath
-    /* final javaCommand = [
-      "java",
-      "-XstartOnFirstThread",
-      "-Djava.library.path=$installDir/natives",
-      "-Dminecraft.launcher.brand=launcher",
-      "-Dminecraft.launcher.version=1.0",
-      "-cp",
-      classpath,
-      "net.minecraft.client.main.Main",
-      "--accessToken",
-      "",
-      "--version",
-      manifesto.id,
-      "--username",
-      "username"
-    ];*/
+    // jvm args -> java main class -> game args
     final javaArgs = [
       ..._fillArgs(args: jvmArgs, env: env),
       manifesto.mainClass,
