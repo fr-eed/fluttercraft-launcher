@@ -121,12 +121,51 @@ class CraftOsModel {
   Map<String, dynamic> toJson() => _$CraftOsModelToJson(this);
 }
 
+class CraftFeatureModel {
+  Map<String, bool> features;
+
+  CraftFeatureModel(this.features);
+
+  factory CraftFeatureModel.fromJson(Map<String, dynamic> json) =>
+      CraftFeatureModel(json.cast<String, bool>());
+
+  Map<String, dynamic> toJson() => {
+        ...features,
+      };
+}
+
 @JsonSerializable(explicitToJson: true)
 class CraftRulesModel {
   final String action;
   final CraftOsModel? os;
+  final CraftFeatureModel? features;
 
-  CraftRulesModel(this.action, this.os);
+  CraftRulesModel({
+    required this.action,
+    this.os,
+    this.features,
+  });
+
+  bool isAllowed({
+    required CraftOsModel os,
+    required CraftFeatureModel features,
+  }) {
+    if (this.os != null) {
+      if (!this.os!.compatibleWith(os)) {
+        return false;
+      }
+    }
+    if (this.features != null) {
+      if (!this
+          .features!
+          .features
+          .entries
+          .every((entry) => features.features[entry.key] == entry.value)) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   factory CraftRulesModel.fromJson(Map<String, dynamic> json) =>
       _$CraftRulesModelFromJson(json);
@@ -155,28 +194,50 @@ class CraftLibraryModel {
 }
 
 class CraftArgumentModel {
-  final String value;
+  final List<String> value;
+  final List<CraftRulesModel> rules;
 
-  CraftArgumentModel(this.value);
+  CraftArgumentModel({
+    required this.value,
+    this.rules = const [],
+  });
 
   // custom from json
   // if map, then name is .value
   // if string then string is name
   factory CraftArgumentModel.fromJson(dynamic json) {
+    List<CraftRulesModel> rules = [];
+    List<String>? value;
+
     if (json is Map<String, dynamic>) {
-      // if value is list, then join by ' '
-      if (json['value'] is List) {
-        return CraftArgumentModel(json['value'].join(' ') as String);
+      final rulesJson = json['rules'];
+      final valueJson = json['value'];
+
+      if (rulesJson != null) {
+        rules = (json['rules'] as List)
+            .map((e) => CraftRulesModel.fromJson(e as Map<String, dynamic>))
+            .toList();
       }
-      return CraftArgumentModel(json['value'] as String);
+      if (valueJson is List) {
+        value = (valueJson).cast<String>();
+      } else if (valueJson is String) {
+        value = [valueJson];
+      } else {
+        throw Exception('Invalid argument type ${json['value']}');
+      }
     } else if (json is String) {
-      return CraftArgumentModel(json);
+      value = [json];
     } else {
       throw Exception('Invalid argument type');
     }
+
+    return CraftArgumentModel(value: value, rules: rules);
   }
 
-  Map<String, dynamic> toJson() => {'value': value};
+  Map<String, dynamic> toJson() => {
+        'value': value,
+        'rules': rules.map((e) => e.toJson()).toList(),
+      };
 }
 
 @JsonSerializable(explicitToJson: true)

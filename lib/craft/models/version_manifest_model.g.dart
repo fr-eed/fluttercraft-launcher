@@ -77,16 +77,21 @@ const _$OsArchEnumMap = {
 
 CraftRulesModel _$CraftRulesModelFromJson(Map<String, dynamic> json) =>
     CraftRulesModel(
-      json['action'] as String,
-      json['os'] == null
+      action: json['action'] as String,
+      os: json['os'] == null
           ? null
           : CraftOsModel.fromJson(json['os'] as Map<String, dynamic>),
+      features: json['features'] == null
+          ? null
+          : CraftFeatureModel.fromJson(
+              json['features'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$CraftRulesModelToJson(CraftRulesModel instance) =>
     <String, dynamic>{
       'action': instance.action,
       'os': instance.os?.toJson(),
+      'features': instance.features?.toJson(),
     };
 
 CraftLibraryModel _$CraftLibraryModelFromJson(Map<String, dynamic> json) =>
