@@ -15,42 +15,38 @@ class CraftInstanceLauncher {
     required this.jarPath,
   });
 
-  static List<String> _fillArgs({
+  /// Fill in the arguments with the environment variables.
+  List<String> _fillArgs({
     required List<String> args,
     required Map<String, String> env,
   }) {
-    // go for each arg, and evaluate ${}
-    List<String> output = [];
-
-    for (final arg in args) {
-      final outputArg = arg.replaceAllMapped(RegExp(r"\$\{(.+?)\}"), (match) {
-        return env[match.group(1) ?? ""] ?? "";
+    return args.map((arg) {
+      return arg.replaceAllMapped(RegExp(r"\$\{(.+?)\}"), (match) {
+        final toInsert = env[match.group(1) ?? ""];
+        if (toInsert == null) {
+          print("Warning: Unknown argument: $arg");
+          return "";
+        }
+        return toInsert;
       });
-      output.add(outputArg);
-      if (outputArg == "") {
-        // warining
-        // TODO add logging
-        print("Warning: Unknown argument: $arg");
-      }
-    }
-    return output;
+    }).toList();
   }
 
+  /// Get the library paths.
   List<String> getLibPaths() {
     final currentOs = CraftOsModel.currentOs();
     final currentFeatures = CraftFeatureModel({}); // no features
 
     return manifesto.libraries
-        .where((library) {
-          return library.rules.every((e) => e.isAllowed(
-                os: currentOs,
-                features: currentFeatures,
-              ));
-        })
+        .where((library) => library.rules.every((e) => e.isAllowed(
+              os: currentOs,
+              features: currentFeatures,
+            )))
         .map((e) => "$installDir/libraries/${e.downloads.artifact.path}")
         .toList();
   }
 
+  /// Validate the libraries.
   bool validateLibraries() {
     // check every path exists
     for (final path in getLibPaths()) {
@@ -61,14 +57,17 @@ class CraftInstanceLauncher {
     return true;
   }
 
+  /// Validate the jar.
   bool validateJar() {
     return File(jarPath).existsSync();
   }
 
+  /// Validate the installation.
   bool validateInstallation() {
     return validateLibraries() && validateJar();
   }
 
+  /// Launch the instance.
   void launch() {
     if (!validateLibraries()) {
       throw Exception("Libraries not found");
@@ -80,26 +79,21 @@ class CraftInstanceLauncher {
     final currentOs = CraftOsModel.currentOs();
     final currentFeatures = CraftFeatureModel({}); // no features
 
-    List<String> jvmArgs = [];
+    List<String> jvmArgs = manifesto.arguments.jvm
+        .where((element) => element.rules.every((e) => e.isAllowed(
+              os: currentOs,
+              features: currentFeatures,
+            )))
+        .expand((element) => element.value)
+        .toList();
 
-    for (var element in manifesto.arguments.jvm) {
-      if (element.rules.every((e) => e.isAllowed(
-            os: currentOs,
-            features: currentFeatures,
-          ))) {
-        jvmArgs.addAll(element.value);
-      }
-    }
-
-    List<String> gameArgs = [];
-    for (var element in manifesto.arguments.game) {
-      if (element.rules.every((e) => e.isAllowed(
-            os: currentOs,
-            features: currentFeatures,
-          ))) {
-        gameArgs.addAll(element.value);
-      }
-    }
+    List<String> gameArgs = manifesto.arguments.game
+        .where((element) => element.rules.every((e) => e.isAllowed(
+              os: currentOs,
+              features: currentFeatures,
+            )))
+        .expand((element) => element.value)
+        .toList();
 
     // Generate the classpath by concatenating each library path
     String classpath = "$jarPath:${getLibPaths().join(":")}";
