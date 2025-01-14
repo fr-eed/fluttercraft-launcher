@@ -105,6 +105,7 @@ class CraftOsModel {
 
   CraftOsModel(this.name, this.arch);
 
+  // other os is compatible when this os is the same/null. Used to check current os compatibility
   bool compatibleWith(CraftOsModel other) {
     return (name ?? other.name) == other.name &&
         (arch ?? other.arch) == other.arch;
@@ -272,7 +273,7 @@ class CraftVersionManifestModel {
   final String mainClass;
   final int minimumLauncherVersion;
   final DateTime releaseTime;
-  final String type; // enum in future
+  final String type; // enum in future. snapshop, release etc
 
   final int complianceLevel;
 
