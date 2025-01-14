@@ -117,7 +117,7 @@ class CraftInstanceLauncher {
       "version_name": manifesto.id,
       "version_type": manifesto.type,
 
-      // insance
+      // instance
       "game_directory":
           "$installDir/gamedir/instance0", // TODO add uuid or smth
 
