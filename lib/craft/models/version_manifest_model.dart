@@ -53,14 +53,20 @@ class LibraryDownloadsModel {
 }
 
 enum OsArch {
-  x86,
   x64,
-  arm32,
-  arm64,
+  x86,
+  arm,
   unknown;
 
   static OsArch getSystemArchitecture() {
     switch (Abi.current()) {
+      case Abi.linuxArm64:
+      case Abi.androidArm64:
+      case Abi.linuxArm:
+      case Abi.androidArm:
+      case Abi.windowsArm64:
+      case Abi.macosArm64:
+        return arm;
       case Abi.linuxX64:
       case Abi.windowsX64:
       case Abi.macosX64:
@@ -68,12 +74,6 @@ enum OsArch {
       case Abi.linuxIA32:
       case Abi.windowsIA32:
         return x86;
-      case Abi.linuxArm64:
-      case Abi.androidArm64:
-        return arm64;
-      case Abi.linuxArm:
-      case Abi.androidArm:
-        return arm32;
       default:
         return unknown;
     }

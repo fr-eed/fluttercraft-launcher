@@ -68,10 +68,9 @@ const _$OsTypeEnumMap = {
 };
 
 const _$OsArchEnumMap = {
-  OsArch.x86: 'x86',
   OsArch.x64: 'x64',
-  OsArch.arm32: 'arm32',
-  OsArch.arm64: 'arm64',
+  OsArch.x86: 'x86',
+  OsArch.arm: 'arm',
   OsArch.unknown: 'unknown',
 };
 
