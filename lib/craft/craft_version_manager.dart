@@ -137,7 +137,7 @@ class CraftVersionManager {
         CraftAssetIndexModel.fromJson(index as Map<String, dynamic>);
 
     List<Future> futures = [];
-    const chunkSize = 100;
+    const chunkSize = 200;
 
     final actualSize = assetIndex.objects.values.fold(0, (a, b) => a + b.size);
     int sizeDownloaded = 0;
@@ -153,15 +153,17 @@ class CraftVersionManager {
         continue;
       }
 
-      print(
-          "Downloading asset ${asset.key} for version ${manifest.majorVersion}");
+      //print(
+      //    "Downloading asset ${asset.key} for version ${manifest.majorVersion}");
 
       futures.add(DownloadManager.downloadFile(url, path));
 
       sizeDownloaded += asset.value.size;
 
       // if futures > chunkSize
-      if (futures.length > chunkSize) {
+      while (futures.length > chunkSize) {
+        await Future.wait(futures.take(1));
+        futures = futures.skip(1).toList();
         // calculate how much left and draw a progressbar
         final left = actualSize - sizeDownloaded;
         final percent = (sizeDownloaded / actualSize) * 100;
@@ -169,9 +171,6 @@ class CraftVersionManager {
         print("Downloading assets... ${percent.toStringAsFixed(2)}% done");
         print(
             "Left: ${(left / 1024 / 1024).toStringAsFixed(2)} MB (${(left / 1024 / 1024 / 1024).toStringAsFixed(2)} GB)");
-
-        await Future.wait(futures.take(chunkSize));
-        futures = futures.skip(chunkSize).toList();
       }
     }
 

@@ -6,25 +6,33 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
 Future<void> main() async {
-  setUpAll(() async {});
+  String installDir = "";
+
+  setUpAll(() async {
+    installDir = p.join(".temp", "fluttcraft");
+    // get full path (not realtive)
+    installDir = p.join(Directory.current.path, installDir);
+    // create dir
+    Directory(installDir).createSync(recursive: true);
+  });
 
   tearDownAll(() async {
     // erase everything
+    Directory(installDir).deleteSync(recursive: true);
   });
-
-  String installDir = "";
-  if (Platform.isMacOS) {
-    final homeDir = Platform.environment['HOME'] ?? '';
-
-    // Build the full path
-    installDir =
-        p.join(homeDir, "Library", "Application Support", "FluttCraft");
-  } else {
-    throw Exception("Unsupported OS");
-  }
 
   group('Craft launcher tests', () {
     group("manifests", () {
+      test("VersionsManifest", () async {
+        final manifestManager = CraftManifestManager(installDir: installDir);
+
+        final manifest = await manifestManager.downloadVersionManifest();
+
+        expect(manifest, isNotNull);
+
+        // expect to have more than 10 versions
+        expect(manifest.versions.length, greaterThan(10));
+      });
       test("ClientManifest", () async {
         const craftVersion = "1.19.2";
         final manifestManager = CraftManifestManager(installDir: installDir);

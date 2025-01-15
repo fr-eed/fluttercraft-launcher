@@ -58,7 +58,12 @@ class CraftManifestManager {
     await DownloadManager.downloadFile(
         'https://piston-meta.mojang.com/mc/game/version_manifest_v2.json',
         versionManifestV2Path());
-    return loadVersionManifest();
+
+    isVersionssManifestV2Parsed = true;
+
+    versionsManifestV2 = await loadVersionManifest();
+
+    return versionsManifestV2!;
   }
 
   Future<CraftClientManifestModel> downloadClientManifest(
