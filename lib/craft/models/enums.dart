@@ -1,7 +1,8 @@
 import 'dart:ffi';
 import 'dart:io';
 
-enum CraftVersionType { snapshot, release }
+// ignore: constant_identifier_names
+enum CraftVersionType { snapshot, release, old_beta, old_alpha }
 
 enum OsArch {
   x64,

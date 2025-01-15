@@ -173,4 +173,6 @@ Map<String, dynamic> _$CraftClientManifestModelToJson(
 const _$CraftVersionTypeEnumMap = {
   CraftVersionType.snapshot: 'snapshot',
   CraftVersionType.release: 'release',
+  CraftVersionType.old_beta: 'old_beta',
+  CraftVersionType.old_alpha: 'old_alpha',
 };

@@ -102,7 +102,8 @@ class CraftInstanceLauncher {
 
     Map<String, String> env = {
       "classpath": classpath,
-      "natives_directory": p.join(installDir, "natives"),
+      "natives_directory":
+          p.join(installDir, "natives", manifesto.majorVersion),
       "launcher_name": "FluttCraft Launcher",
       "launcher_version": "1.0.0",
 
