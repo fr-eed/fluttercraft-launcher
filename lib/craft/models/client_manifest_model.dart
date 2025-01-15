@@ -1,9 +1,8 @@
-import 'dart:ffi';
-import 'dart:io';
-
 import 'package:json_annotation/json_annotation.dart';
 
-part 'version_manifest_model.g.dart';
+import 'enums.dart';
+
+part 'client_manifest_model.g.dart';
 
 @JsonSerializable(explicitToJson: true)
 class CraftJavaVersionModel {
@@ -52,52 +51,6 @@ class LibraryDownloadsModel {
   Map<String, dynamic> toJson() => _$LibraryDownloadsModelToJson(this);
 }
 
-enum OsArch {
-  x64,
-  x86,
-  arm,
-  unknown;
-
-  static OsArch getSystemArchitecture() {
-    switch (Abi.current()) {
-      case Abi.linuxArm64:
-      case Abi.androidArm64:
-      case Abi.linuxArm:
-      case Abi.androidArm:
-      case Abi.windowsArm64:
-      case Abi.macosArm64:
-        return arm;
-      case Abi.linuxX64:
-      case Abi.windowsX64:
-      case Abi.macosX64:
-        return x64;
-      case Abi.linuxIA32:
-      case Abi.windowsIA32:
-        return x86;
-      default:
-        return unknown;
-    }
-  }
-}
-
-enum OsType {
-  windows,
-  linux,
-  osx;
-
-  static OsType getSystemOS() {
-    if (Platform.isWindows) {
-      return OsType.windows;
-    } else if (Platform.isLinux) {
-      return OsType.linux;
-    } else if (Platform.isMacOS) {
-      return OsType.osx;
-    } else {
-      throw Exception("Unsupported OS");
-    }
-  }
-}
-
 @JsonSerializable(explicitToJson: true)
 class CraftOsModel {
   OsType? name;
@@ -135,11 +88,6 @@ class CraftFeatureModel {
       };
 }
 
-enum RuleAction {
-  allow,
-  disallow,
-}
-
 @JsonSerializable(explicitToJson: true)
 class CraftRulesModel {
   final RuleAction action;
@@ -152,7 +100,8 @@ class CraftRulesModel {
     this.features,
   });
 
-  bool _isAllowed({
+  /// Can either apply or not apply. ignores action.
+  bool _isFilterApplies({
     required CraftOsModel os,
     required CraftFeatureModel features,
   }) {
@@ -173,13 +122,14 @@ class CraftRulesModel {
     return true;
   }
 
+  /// Checks if rule is allowed for the given os and features
   bool isAllowed({
     required CraftOsModel os,
     required CraftFeatureModel features,
   }) {
     return action == RuleAction.allow
-        ? _isAllowed(os: os, features: features)
-        : !_isAllowed(os: os, features: features);
+        ? _isFilterApplies(os: os, features: features)
+        : !_isFilterApplies(os: os, features: features);
   }
 
   factory CraftRulesModel.fromJson(Map<String, dynamic> json) =>
@@ -272,7 +222,7 @@ class CraftArgumentsModel {
 }
 
 @JsonSerializable(explicitToJson: true)
-class CraftVersionManifestModel {
+class CraftClientManifestModel {
   final String id;
 
   String get majorVersion {
@@ -287,7 +237,7 @@ class CraftVersionManifestModel {
   final String mainClass;
   final int minimumLauncherVersion;
   final DateTime releaseTime;
-  final String type; // enum in future. snapshop, release etc
+  final CraftVersionType type; // snapshop, release etc
 
   final int complianceLevel;
 
@@ -298,7 +248,7 @@ class CraftVersionManifestModel {
 
   final CraftArgumentsModel arguments;
 
-  CraftVersionManifestModel({
+  CraftClientManifestModel({
     required this.id,
     required this.mainClass,
     required this.minimumLauncherVersion,
@@ -311,8 +261,8 @@ class CraftVersionManifestModel {
     required this.arguments,
   });
 
-  factory CraftVersionManifestModel.fromJson(Map<String, dynamic> json) =>
-      _$CraftVersionManifestModelFromJson(json);
+  factory CraftClientManifestModel.fromJson(Map<String, dynamic> json) =>
+      _$CraftClientManifestModelFromJson(json);
 
-  Map<String, dynamic> toJson() => _$CraftVersionManifestModelToJson(this);
+  Map<String, dynamic> toJson() => _$CraftClientManifestModelToJson(this);
 }

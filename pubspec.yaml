@@ -21,6 +21,7 @@ dependencies:
   uuid: ^4.5.1
   hydrated_bloc: ^10.0.0
   path_provider: ^2.1.5
+  path: ^1.9.0
 
 dev_dependencies:
   analysis_defaults:
@@ -31,7 +32,7 @@ dev_dependencies:
     sdk: flutter
   build_runner: ^2.4.14
   json_serializable: ^6.9.3
-  path: ^1.9.0
+  
 
 flutter:
   uses-material-design: true

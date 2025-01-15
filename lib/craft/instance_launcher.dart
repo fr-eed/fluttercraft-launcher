@@ -1,10 +1,12 @@
 import "dart:io";
+
+import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
 
-import "./models/version_manifest_model.dart";
+import "models/client_manifest_model.dart";
 
 class CraftInstanceLauncher {
-  final CraftVersionManifestModel manifesto;
+  final CraftClientManifestModel manifesto;
 
   final String installDir;
   final String jarPath;
@@ -42,7 +44,7 @@ class CraftInstanceLauncher {
               os: currentOs,
               features: currentFeatures,
             )))
-        .map((e) => "$installDir/libraries/${e.downloads.artifact.path}")
+        .map((e) => p.join(installDir, 'libraries', e.downloads.artifact.path))
         .toList();
   }
 
@@ -100,20 +102,21 @@ class CraftInstanceLauncher {
 
     Map<String, String> env = {
       "classpath": classpath,
-      "natives_directory": "$installDir/natives",
+      "natives_directory": p.join(installDir, "natives"),
       "launcher_name": "FluttCraft Launcher",
       "launcher_version": "1.0.0",
 
-      "assets_root": "$installDir/assets",
-      "assets_index_name": manifesto
-          .majorVersion, // major is index // will read from assets/index/19.2.json
+      "assets_root": p.join(installDir, "assets"),
+
+      // major is index // will read from assets/index/19.2.json
+      "assets_index_name": manifesto.majorVersion,
 
       "version_name": manifesto.id,
-      "version_type": manifesto.type,
+      "version_type": manifesto.type.name,
 
       // instance
       "game_directory":
-          "$installDir/gamedir/instance0", // TODO add uuid or smth
+          p.join(installDir, "gamedir", "instance0"), // TODO add uuid or smth
 
       // usr
       "auth_player_name": "FluttCrafter",

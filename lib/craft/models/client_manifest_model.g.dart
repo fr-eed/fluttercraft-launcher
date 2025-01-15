@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'version_manifest_model.dart';
+part of 'client_manifest_model.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
@@ -133,14 +133,14 @@ Map<String, dynamic> _$CraftArgumentsModelToJson(
       'jvm': instance.jvm.map((e) => e.toJson()).toList(),
     };
 
-CraftVersionManifestModel _$CraftVersionManifestModelFromJson(
+CraftClientManifestModel _$CraftClientManifestModelFromJson(
         Map<String, dynamic> json) =>
-    CraftVersionManifestModel(
+    CraftClientManifestModel(
       id: json['id'] as String,
       mainClass: json['mainClass'] as String,
       minimumLauncherVersion: (json['minimumLauncherVersion'] as num).toInt(),
       releaseTime: DateTime.parse(json['releaseTime'] as String),
-      type: json['type'] as String,
+      type: $enumDecode(_$CraftVersionTypeEnumMap, json['type']),
       complianceLevel: (json['complianceLevel'] as num).toInt(),
       javaVersion: CraftJavaVersionModel.fromJson(
           json['javaVersion'] as Map<String, dynamic>),
@@ -155,17 +155,22 @@ CraftVersionManifestModel _$CraftVersionManifestModelFromJson(
           json['arguments'] as Map<String, dynamic>),
     );
 
-Map<String, dynamic> _$CraftVersionManifestModelToJson(
-        CraftVersionManifestModel instance) =>
+Map<String, dynamic> _$CraftClientManifestModelToJson(
+        CraftClientManifestModel instance) =>
     <String, dynamic>{
       'id': instance.id,
       'mainClass': instance.mainClass,
       'minimumLauncherVersion': instance.minimumLauncherVersion,
       'releaseTime': instance.releaseTime.toIso8601String(),
-      'type': instance.type,
+      'type': _$CraftVersionTypeEnumMap[instance.type]!,
       'complianceLevel': instance.complianceLevel,
       'javaVersion': instance.javaVersion.toJson(),
       'downloads': instance.downloads.map((k, e) => MapEntry(k, e.toJson())),
       'libraries': instance.libraries.map((e) => e.toJson()).toList(),
       'arguments': instance.arguments.toJson(),
     };
+
+const _$CraftVersionTypeEnumMap = {
+  CraftVersionType.snapshot: 'snapshot',
+  CraftVersionType.release: 'release',
+};
