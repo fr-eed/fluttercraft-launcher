@@ -10,6 +10,38 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'constants.dart';
 
+class ImageThemeMenuItem extends StatelessWidget {
+  final String imgPath;
+  final String name;
+
+  const ImageThemeMenuItem({
+    required this.imgPath,
+    required this.name,
+    super.key,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(4.0),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8.0),
+            child: Image.asset(
+              imgPath,
+              width: 36,
+              height: 36,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        const SizedBox(width: 14),
+        Text(name),
+      ],
+    );
+  }
+}
+
 class Home extends StatefulWidget {
   final Widget child;
   final int index;
@@ -139,59 +171,27 @@ class _HomeState extends State<Home> {
                               return [
                                 PopupMenuItem<String>(
                                   value: 'spring',
-                                  child: Row(
-                                    children: [
-                                      Image.asset(
-                                        'assets/bg_spring.webp',
-                                        width: 48,
-                                        height: 48,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      const Text('Spring'),
-                                    ],
-                                  ),
+                                  child: ImageThemeMenuItem(
+                                      imgPath: 'assets/bg_spring.webp',
+                                      name: 'Spring'),
                                 ),
                                 PopupMenuItem<String>(
                                   value: 'winter',
-                                  child: Row(
-                                    children: [
-                                      Image.asset(
-                                        'assets/bg_winter.webp',
-                                        width: 48,
-                                        height: 48,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      const Text('Winter'),
-                                    ],
-                                  ),
+                                  child: ImageThemeMenuItem(
+                                      imgPath: 'assets/bg_winter.webp',
+                                      name: 'Winter'),
                                 ),
                                 PopupMenuItem<String>(
                                   value: 'end',
-                                  child: Row(
-                                    children: [
-                                      Image.asset(
-                                        'assets/bg_end.webp',
-                                        width: 48,
-                                        height: 48,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      const Text('End'),
-                                    ],
-                                  ),
+                                  child: ImageThemeMenuItem(
+                                      imgPath: 'assets/bg_end.webp',
+                                      name: 'End'),
                                 ),
                                 PopupMenuItem<String>(
                                   value: 'desert',
-                                  child: Row(
-                                    children: [
-                                      Image.asset(
-                                        'assets/bg_desert.webp',
-                                        width: 48,
-                                        height: 48,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      const Text('Desert'),
-                                    ],
-                                  ),
+                                  child: ImageThemeMenuItem(
+                                      imgPath: 'assets/bg_desert.webp',
+                                      name: 'Desert'),
                                 ),
                               ];
                             },
