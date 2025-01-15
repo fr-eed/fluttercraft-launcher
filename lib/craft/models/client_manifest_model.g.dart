@@ -133,6 +133,24 @@ Map<String, dynamic> _$CraftArgumentsModelToJson(
       'jvm': instance.jvm.map((e) => e.toJson()).toList(),
     };
 
+CraftAssetIndex _$CraftAssetIndexFromJson(Map<String, dynamic> json) =>
+    CraftAssetIndex(
+      id: json['id'] as String,
+      sha1: json['sha1'] as String,
+      size: (json['size'] as num).toInt(),
+      totalSize: (json['totalSize'] as num).toInt(),
+      url: json['url'] as String,
+    );
+
+Map<String, dynamic> _$CraftAssetIndexToJson(CraftAssetIndex instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'sha1': instance.sha1,
+      'size': instance.size,
+      'totalSize': instance.totalSize,
+      'url': instance.url,
+    };
+
 CraftClientManifestModel _$CraftClientManifestModelFromJson(
         Map<String, dynamic> json) =>
     CraftClientManifestModel(
@@ -153,6 +171,8 @@ CraftClientManifestModel _$CraftClientManifestModelFromJson(
           .toList(),
       arguments: CraftArgumentsModel.fromJson(
           json['arguments'] as Map<String, dynamic>),
+      assetIndex:
+          CraftAssetIndex.fromJson(json['assetIndex'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$CraftClientManifestModelToJson(
@@ -168,6 +188,7 @@ Map<String, dynamic> _$CraftClientManifestModelToJson(
       'downloads': instance.downloads.map((k, e) => MapEntry(k, e.toJson())),
       'libraries': instance.libraries.map((e) => e.toJson()).toList(),
       'arguments': instance.arguments.toJson(),
+      'assetIndex': instance.assetIndex.toJson(),
     };
 
 const _$CraftVersionTypeEnumMap = {

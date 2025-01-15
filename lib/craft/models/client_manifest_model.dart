@@ -222,6 +222,28 @@ class CraftArgumentsModel {
 }
 
 @JsonSerializable(explicitToJson: true)
+class CraftAssetIndex {
+  final String id;
+  final String sha1;
+  final int size;
+  final int totalSize;
+  final String url;
+
+  CraftAssetIndex({
+    required this.id,
+    required this.sha1,
+    required this.size,
+    required this.totalSize,
+    required this.url,
+  });
+
+  factory CraftAssetIndex.fromJson(Map<String, dynamic> json) =>
+      _$CraftAssetIndexFromJson(json);
+
+  Map<String, dynamic> toJson() => _$CraftAssetIndexToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true)
 class CraftClientManifestModel {
   final String id;
 
@@ -248,6 +270,8 @@ class CraftClientManifestModel {
 
   final CraftArgumentsModel arguments;
 
+  final CraftAssetIndex assetIndex;
+
   CraftClientManifestModel({
     required this.id,
     required this.mainClass,
@@ -259,6 +283,7 @@ class CraftClientManifestModel {
     required this.downloads,
     required this.libraries,
     required this.arguments,
+    required this.assetIndex,
   });
 
   factory CraftClientManifestModel.fromJson(Map<String, dynamic> json) =>
