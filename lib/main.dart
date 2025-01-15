@@ -7,6 +7,8 @@ import 'constants.dart';
 import 'home.dart';
 import 'package:go_router/go_router.dart';
 import 'screens/instance_screen.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
+import 'package:path_provider/path_provider.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -67,6 +69,11 @@ Future<ColorScheme?> initializeColorScheme(
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  HydratedBloc.storage = await HydratedStorage.build(
+    storageDirectory: HydratedStorageDirectory(
+      (await getTemporaryDirectory()).path,
+    ),
+  );
 
   // Initialize the window
   await initializeWindow();
@@ -99,12 +106,13 @@ class App extends StatelessWidget {
       builder: (context, state) {
         return MaterialApp.router(
           theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.green,
-              brightness: context.read<SettingsCubit>().state.isDarkMode
-                  ? Brightness.dark
-                  : Brightness.light,
-            ),
+            colorScheme: context.read<SettingsCubit>().state.themeColorScheme,
+            // colorScheme: ColorScheme.fromSeed(
+            //   seedColor: Colors.green,
+            //   brightness: context.read<SettingsCubit>().state.isDarkMode
+            //       ? Brightness.dark
+            //       : Brightness.light,
+            // ),
             useMaterial3: true,
           ),
           routeInformationProvider: _router.routeInformationProvider,

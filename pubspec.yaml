@@ -19,6 +19,8 @@ dependencies:
   go_router: ^14.6.3
   flutter_bloc: ^9.0.0
   uuid: ^4.5.1
+  hydrated_bloc: ^10.0.0
+  path_provider: ^2.1.5
 
 dev_dependencies:
   analysis_defaults:
