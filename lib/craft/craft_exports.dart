@@ -1,5 +1,6 @@
 export 'dart:convert';
 export 'dart:io';
+export 'package:uuid/uuid.dart';
 
 export 'craft_launcher.dart';
 export 'craft_manifest_manager.dart';
