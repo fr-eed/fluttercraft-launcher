@@ -1,3 +1,4 @@
+import 'package:fluttcraft_launcher/screens/java_config_screen.dart';
 import 'package:fluttcraft_launcher/screens/play_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'cubits/settings_cubit.dart';
@@ -9,6 +10,8 @@ import 'package:go_router/go_router.dart';
 import 'screens/instance_screen.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:path_provider/path_provider.dart';
+import 'screens/skins_screen.dart';
+import 'screens/java_config_screen.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -34,6 +37,18 @@ final GoRouter _router = GoRouter(
           path: '/instances',
           builder: (context, state) {
             return InstancesScreen();
+          },
+        ),
+        GoRoute(
+          path: '/skins',
+          builder: (context, state) {
+            return SkinGridScreen();
+          },
+        ),
+        GoRoute(
+          path: '/java',
+          builder: (context, state) {
+            return JavaConfigScreen();
           },
         ),
       ],

@@ -49,12 +49,13 @@ class _HomeState extends State<Home> {
                   });
                   switch (index) {
                     case 0:
-                      {
-                        context.go('/home');
-                      }
-
+                      context.go('/home');
                     case 1:
                       context.go('/instances');
+                    case 2:
+                      context.go('/skins');
+                    case 3:
+                      context.go('/java');
                   }
                 },
                 destinations: const [
