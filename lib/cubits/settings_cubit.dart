@@ -5,12 +5,10 @@ class SettingsCubit extends HydratedCubit<SettingsState> {
   SettingsCubit() : super(const SettingsState());
 
   void cycleBrightness() {
-    switch (state.brightness) {
+    switch (state.themeBrightness) {
       case Brightness.light:
         emit(state.copyWith(brightness: Brightness.dark));
       case Brightness.dark:
-        emit(state.copyWith(brightness: Brightness.system));
-      case Brightness.system:
         emit(state.copyWith(brightness: Brightness.light));
     }
   }
@@ -19,13 +17,17 @@ class SettingsCubit extends HydratedCubit<SettingsState> {
     emit(state.copyWith(fontSize: size));
   }
 
+  void setThemeBrightness(Brightness brightness) {
+    emit(state.copyWith(brightness: brightness));
+  }
+
   void toggleNotifications(bool enabled) {
     emit(state.copyWith(notificationsEnabled: enabled));
   }
 
   Future<void> updateThemeWithImage(String imagePath) async {
     final colorScheme = await ColorScheme.fromImageProvider(
-      brightness: state.brightness,
+      brightness: state.themeBrightness,
       provider: AssetImage(imagePath),
     );
 
@@ -38,8 +40,8 @@ class SettingsCubit extends HydratedCubit<SettingsState> {
   @override
   SettingsState? fromJson(Map<String, dynamic> json) {
     return SettingsState(
-      brightness: Brightness.values
-          .byName(json['brightness'] as String? ?? 'system'),
+      themeBrightness:
+          Brightness.values.byName(json['brightness'] as String? ?? 'system'),
       fontSize: (json['fontSize'] as num?)?.toDouble() ?? 14.0,
       notificationsEnabled: json['notificationsEnabled'] as bool? ?? true,
       selectedImagePath: json['selectedImagePath'] as String? ?? '',
@@ -49,7 +51,7 @@ class SettingsCubit extends HydratedCubit<SettingsState> {
   @override
   Map<String, dynamic>? toJson(SettingsState state) {
     return {
-      'brightness': state.brightness.name,
+      'themeBrightness': state.themeBrightness.name,
       'fontSize': state.fontSize,
       'notificationsEnabled': state.notificationsEnabled,
       'selectedImagePath': state.selectedImagePath,
@@ -57,17 +59,15 @@ class SettingsCubit extends HydratedCubit<SettingsState> {
   }
 }
 
-enum Brightness { light, dark, system }
-
 class SettingsState {
-  final Brightness brightness;
+  final Brightness themeBrightness;
   final double fontSize;
   final bool notificationsEnabled;
   final String selectedImagePath;
   final ColorScheme? themeColorScheme;
 
   const SettingsState({
-    this.brightness = Brightness.system,
+    this.themeBrightness = Brightness.light,
     this.fontSize = 14.0,
     this.notificationsEnabled = true,
     this.selectedImagePath = 'assets/bg_spring.webp',
@@ -82,10 +82,11 @@ class SettingsState {
     ColorScheme? themeColorScheme,
   }) {
     return SettingsState(
-      brightness: brightness ?? this.brightness,
+      themeBrightness: brightness ?? this.themeBrightness,
       fontSize: fontSize ?? this.fontSize,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       selectedImagePath: selectedImagePath ?? this.selectedImagePath,
       themeColorScheme: themeColorScheme ?? this.themeColorScheme,
     );
   }
+}

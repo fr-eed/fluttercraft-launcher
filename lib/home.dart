@@ -229,7 +229,7 @@ class _BrightnessButton extends StatelessWidget {
             icon: isBright
                 ? const Icon(Icons.dark_mode_outlined)
                 : const Icon(Icons.light_mode_outlined),
-            onPressed: () => context.read<SettingsCubit>().toggleBrightness(),
+            onPressed: () => context.read<SettingsCubit>().cycleBrightness(),
           ),
         );
       },
