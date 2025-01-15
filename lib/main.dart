@@ -117,21 +117,12 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Brightness brightness = MediaQuery.platformBrightnessOf(context);
-
     return BlocBuilder<SettingsCubit, SettingsState>(
       builder: (context, state) {
-        context.read<SettingsCubit>().setThemeBrightness(brightness);
-
+        final themeManager = ThemeManager(state, context);
         return MaterialApp.router(
           theme: ThemeData(
-            colorScheme: context.read<SettingsCubit>().state.themeColorScheme,
-            // colorScheme: ColorScheme.fromSeed(
-            //   seedColor: Colors.green,
-            //   brightness: context.read<SettingsCubit>().state.isDarkMode
-            //       ? Brightness.dark
-            //       : Brightness.light,
-            // ),
+            colorScheme: themeManager.themeColorScheme,
             useMaterial3: true,
           ),
           routeInformationProvider: _router.routeInformationProvider,

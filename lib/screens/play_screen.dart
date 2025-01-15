@@ -1,8 +1,9 @@
+import 'dart:ui';
+
 import 'package:fluttcraft_launcher/constants.dart';
 import 'package:fluttcraft_launcher/cubits/settings_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'dart:ui';
 
 class PlayScreen extends StatelessWidget {
   final ColorImageProvider imageSelected;

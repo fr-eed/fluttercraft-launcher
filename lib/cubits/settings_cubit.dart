@@ -2,14 +2,24 @@ import "package:flutter/material.dart";
 import "package:hydrated_bloc/hydrated_bloc.dart";
 
 class SettingsCubit extends HydratedCubit<SettingsState> {
-  SettingsCubit() : super(const SettingsState());
+  SettingsCubit() : super(const SettingsState()) {
+    _init();
+  }
 
-  void cycleBrightness() {
-    switch (state.themeBrightness) {
-      case Brightness.light:
-        emit(state.copyWith(brightness: Brightness.dark));
-      case Brightness.dark:
-        emit(state.copyWith(brightness: Brightness.light));
+  void _init() {
+    // init theme
+    // TODO use theme color manager
+    updateThemeWithImage(state.selectedImagePath);
+  }
+
+  void cycleBrightnessModes() {
+    switch (state.brightnessMode) {
+      case BrightnessMode.light:
+        setThemeBrightnessMode(BrightnessMode.dark);
+      case BrightnessMode.dark:
+        setThemeBrightnessMode(BrightnessMode.system);
+      case BrightnessMode.system:
+        setThemeBrightnessMode(BrightnessMode.light);
     }
   }
 
@@ -17,8 +27,10 @@ class SettingsCubit extends HydratedCubit<SettingsState> {
     emit(state.copyWith(fontSize: size));
   }
 
-  void setThemeBrightness(Brightness brightness) {
-    emit(state.copyWith(brightness: brightness));
+  void setThemeBrightnessMode(BrightnessMode brightnessMode) {
+    emit(state.copyWith(
+      brightnessMode: brightnessMode,
+    ));
   }
 
   void toggleNotifications(bool enabled) {
@@ -26,13 +38,19 @@ class SettingsCubit extends HydratedCubit<SettingsState> {
   }
 
   Future<void> updateThemeWithImage(String imagePath) async {
-    final colorScheme = await ColorScheme.fromImageProvider(
-      brightness: state.themeBrightness,
+    final colorSchemeLight = await ColorScheme.fromImageProvider(
+      brightness: Brightness.light,
+      provider: AssetImage(imagePath),
+    );
+
+    final colorSchemeDark = await ColorScheme.fromImageProvider(
+      brightness: Brightness.dark,
       provider: AssetImage(imagePath),
     );
 
     emit(state.copyWith(
-      themeColorScheme: colorScheme,
+      themeColorSchemeLight: colorSchemeLight,
+      themeColorSchemeDark: colorSchemeDark,
       selectedImagePath: imagePath,
     ));
   }
@@ -40,8 +58,8 @@ class SettingsCubit extends HydratedCubit<SettingsState> {
   @override
   SettingsState? fromJson(Map<String, dynamic> json) {
     return SettingsState(
-      themeBrightness:
-          Brightness.values.byName(json['brightness'] as String? ?? 'system'),
+      brightnessMode: BrightnessMode.values
+          .byName(json['brightnessMode'] as String? ?? 'system'),
       fontSize: (json['fontSize'] as num?)?.toDouble() ?? 14.0,
       notificationsEnabled: json['notificationsEnabled'] as bool? ?? true,
       selectedImagePath: json['selectedImagePath'] as String? ?? '',
@@ -51,7 +69,7 @@ class SettingsCubit extends HydratedCubit<SettingsState> {
   @override
   Map<String, dynamic>? toJson(SettingsState state) {
     return {
-      'themeBrightness': state.themeBrightness.name,
+      'brightnessMode': state.brightnessMode.name,
       'fontSize': state.fontSize,
       'notificationsEnabled': state.notificationsEnabled,
       'selectedImagePath': state.selectedImagePath,
@@ -59,34 +77,70 @@ class SettingsCubit extends HydratedCubit<SettingsState> {
   }
 }
 
+enum BrightnessMode { system, light, dark }
+
+class ThemeManager {
+  final SettingsState state;
+  final BuildContext context;
+
+  ThemeManager(this.state, this.context);
+
+  Brightness get themeBrightness {
+    switch (state.brightnessMode) {
+      case BrightnessMode.system:
+        return View.of(context).platformDispatcher.platformBrightness;
+      case BrightnessMode.light:
+        return Brightness.light;
+      case BrightnessMode.dark:
+        return Brightness.dark;
+    }
+  }
+
+  ColorScheme get themeColorScheme {
+    return (themeBrightness == Brightness.light
+            ? state.themeColorSchemeLight
+            : state.themeColorSchemeDark) ??
+        ColorScheme.fromSeed(
+          // fallback
+          brightness: themeBrightness,
+          seedColor: Colors.blue,
+        );
+  }
+}
+
 class SettingsState {
-  final Brightness themeBrightness;
+  final BrightnessMode brightnessMode;
   final double fontSize;
   final bool notificationsEnabled;
   final String selectedImagePath;
-  final ColorScheme? themeColorScheme;
+  final ColorScheme? themeColorSchemeLight;
+  final ColorScheme? themeColorSchemeDark;
 
   const SettingsState({
-    this.themeBrightness = Brightness.light,
+    this.brightnessMode = BrightnessMode.system,
     this.fontSize = 14.0,
     this.notificationsEnabled = true,
     this.selectedImagePath = 'assets/bg_spring.webp',
-    this.themeColorScheme,
+    this.themeColorSchemeLight,
+    this.themeColorSchemeDark,
   });
 
   SettingsState copyWith({
-    Brightness? brightness,
+    BrightnessMode? brightnessMode,
     double? fontSize,
     bool? notificationsEnabled,
     String? selectedImagePath,
-    ColorScheme? themeColorScheme,
+    ColorScheme? themeColorSchemeDark,
+    ColorScheme? themeColorSchemeLight,
   }) {
     return SettingsState(
-      themeBrightness: brightness ?? this.themeBrightness,
+      brightnessMode: brightnessMode ?? this.brightnessMode,
       fontSize: fontSize ?? this.fontSize,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       selectedImagePath: selectedImagePath ?? this.selectedImagePath,
-      themeColorScheme: themeColorScheme ?? this.themeColorScheme,
+      themeColorSchemeDark: themeColorSchemeDark ?? this.themeColorSchemeDark,
+      themeColorSchemeLight:
+          themeColorSchemeLight ?? this.themeColorSchemeLight,
     );
   }
 }

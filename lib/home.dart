@@ -220,17 +220,20 @@ class _BrightnessButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isBright = Theme.of(context).brightness == Brightness.light;
     return BlocBuilder<SettingsCubit, SettingsState>(
       builder: (context, state) {
         return Tooltip(
           preferBelow: showTooltipBelow,
           message: 'Toggle brightness',
           child: IconButton(
-            icon: isBright
+            // dark = dark icon because inconsistency with auto brightness
+            icon: state.brightnessMode == BrightnessMode.dark
                 ? const Icon(Icons.dark_mode_outlined)
-                : const Icon(Icons.light_mode_outlined),
-            onPressed: () => context.read<SettingsCubit>().cycleBrightness(),
+                : state.brightnessMode == BrightnessMode.light
+                    ? const Icon(Icons.light_mode_outlined)
+                    : const Icon(Icons.brightness_auto_outlined),
+            onPressed: () =>
+                context.read<SettingsCubit>().cycleBrightnessModes(),
           ),
         );
       },
