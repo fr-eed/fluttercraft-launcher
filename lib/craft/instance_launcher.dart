@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:path/path.dart' as p;
 
 import 'craft_exports.dart';
@@ -8,11 +10,13 @@ class CraftInstanceLauncher {
   final String installDir;
   final String jarPath;
 
-  CraftInstanceLauncher({
-    required this.manifesto,
-    required this.installDir,
-    required this.jarPath,
-  });
+  final String javaExecutable;
+
+  CraftInstanceLauncher(
+      {required this.manifesto,
+      required this.installDir,
+      required this.jarPath,
+      required this.javaExecutable});
 
   /// Fill in the arguments with the environment variables.
   List<String> _fillArgs({
@@ -20,15 +24,22 @@ class CraftInstanceLauncher {
     required Map<String, String> env,
   }) {
     return args.map((arg) {
-      return arg.replaceAllMapped(RegExp(r"\$\{(.+?)\}"), (match) {
-        final toInsert = env[match.group(1) ?? ""];
-        if (toInsert == null) {
-          print("Warning: Unknown argument: $arg");
-          return "";
-        }
-        return toInsert;
-      });
+      return _FillArg(arg: arg, env: env);
     }).toList();
+  }
+
+  static String _FillArg({
+    required String arg,
+    required Map<String, String> env,
+  }) {
+    return arg.replaceAllMapped(RegExp(r"\$\{(.+?)\}"), (match) {
+      final toInsert = env[match.group(1) ?? ""];
+      if (toInsert == null) {
+        print("Warning: Unknown argument: $arg");
+        return "";
+      }
+      return toInsert;
+    });
   }
 
   /// Get the library paths.
@@ -41,7 +52,8 @@ class CraftInstanceLauncher {
               os: currentOs,
               features: currentFeatures,
             )))
-        .map((e) => p.join(installDir, 'libraries', e.downloads.artifact.path))
+        .map((e) =>
+            p.join(installDir, 'libraries', e.downloads.artifact?.path ?? ""))
         .toList();
   }
 
@@ -67,7 +79,7 @@ class CraftInstanceLauncher {
   }
 
   /// Launch the instance.
-  void launch() {
+  Future<Process> launch() async {
     if (!validateLibraries()) {
       throw Exception("Libraries not found");
     }
@@ -77,22 +89,6 @@ class CraftInstanceLauncher {
 
     final currentOs = CraftOsModel.currentOs();
     final currentFeatures = CraftFeatureModel({}); // no features
-
-    List<String> jvmArgs = manifesto.arguments.jvm
-        .where((element) => element.rules.every((e) => e.isAllowed(
-              os: currentOs,
-              features: currentFeatures,
-            )))
-        .expand((element) => element.value)
-        .toList();
-
-    List<String> gameArgs = manifesto.arguments.game
-        .where((element) => element.rules.every((e) => e.isAllowed(
-              os: currentOs,
-              features: currentFeatures,
-            )))
-        .expand((element) => element.value)
-        .toList();
 
     // Generate the classpath by concatenating each library path
     String classpath = "$jarPath:${getLibPaths().join(":")}";
@@ -105,6 +101,8 @@ class CraftInstanceLauncher {
       "launcher_version": "1.0.0",
 
       "assets_root": p.join(installDir, "assets"),
+      // legacy
+      "game_assets": p.join(installDir, "assets"),
 
       // major is index // will read from assets/index/19.2.json
       "assets_index_name": manifesto.majorVersion,
@@ -125,20 +123,45 @@ class CraftInstanceLauncher {
       "user_type": "mojang",
     };
 
-    // jvm args -> java main class -> game args
-    final javaArgs = [
-      ..._fillArgs(args: jvmArgs, env: env),
-      manifesto.mainClass,
-      ..._fillArgs(args: gameArgs, env: env),
-    ];
-    // TODO select java version
-    final result = Process.runSync(
-      'java',
-      javaArgs,
-      workingDirectory: installDir,
-    );
-    if (result.exitCode != 0) {
-      throw Exception(result.stderr);
+    List<String> javaArgs = [];
+
+    if (manifesto.arguments != null) {
+      List<String> jvmArgs = manifesto.arguments!.jvm
+          .where((element) => element.rules.every((e) => e.isAllowed(
+                os: currentOs,
+                features: currentFeatures,
+              )))
+          .expand((element) => element.value)
+          .toList();
+
+      List<String> gameArgs = manifesto.arguments!.game
+          .where((element) => element.rules.every((e) => e.isAllowed(
+                os: currentOs,
+                features: currentFeatures,
+              )))
+          .expand((element) => element.value)
+          .toList();
+
+      // jvm args -> java main class -> game args
+      javaArgs = [
+        ..._fillArgs(args: jvmArgs, env: env),
+        manifesto.mainClass,
+        ..._fillArgs(args: gameArgs, env: env),
+      ];
+    } else if (manifesto.minecraftArguments != null) {
+      javaArgs = [
+        "-cp",
+        classpath,
+        manifesto.mainClass,
+        _FillArg(arg: manifesto.minecraftArguments!, env: env)
+      ];
+    } else {
+      throw Exception("No arguments found");
     }
+    // TODO select java version
+    final process = await Process.start(javaExecutable, javaArgs,
+        workingDirectory: installDir, runInShell: true);
+
+    return process;
   }
 }

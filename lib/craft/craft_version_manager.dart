@@ -45,7 +45,7 @@ class CraftVersionManager {
               os: currentOs,
               features: currentFeatures,
             )))
-        .map((e) => pathToLib(e.downloads.artifact.path!))
+        .map((e) => pathToLib(e.downloads.artifact?.path ?? ""))
         .toList();
   }
 
@@ -79,7 +79,12 @@ class CraftVersionManager {
     List<Future> futures = [];
     const chunkSize = 30;
     for (final lib in manifest.libraries) {
-      final downloadPath = pathToLib(lib.downloads.artifact.path!);
+      // skip if no artifact
+      if (lib.downloads.artifact == null) {
+        continue;
+      }
+      final downloadPath = pathToLib(lib.downloads.artifact!.path!);
+      final url = lib.downloads.artifact!.url;
 
       if (File(downloadPath).existsSync()) {
         continue;
@@ -95,7 +100,7 @@ class CraftVersionManager {
       }
 
       print("Downloading lib ${lib.name} for version ${manifest.id}");
-      final url = lib.downloads.artifact.url;
+
       futures.add(DownloadManager.downloadFile(url, downloadPath));
 
       if (futures.length > chunkSize) {

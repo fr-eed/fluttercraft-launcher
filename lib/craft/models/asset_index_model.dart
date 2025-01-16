@@ -1,7 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
 
-import 'enums.dart';
-
 part 'asset_index_model.g.dart';
 
 @JsonSerializable(explicitToJson: true)
