@@ -1,3 +1,4 @@
+import 'package:fluttcraft_launcher/util/beaver.dart';
 import 'package:path/path.dart' as p;
 
 import 'craft_exports.dart';
@@ -96,12 +97,12 @@ class CraftVersionManager {
             os: currentOs,
             features: currentFeatures,
           ))) {
-        print(
+        BeaverLog.log(
             "Skipping ${lib.name} for version ${manifest.id} because incompatible");
         continue;
       }
 
-      print("Downloading lib ${lib.name} for version ${manifest.id}");
+      BeaverLog.log("Downloading lib ${lib.name} for version ${manifest.id}");
 
       futures.add(DownloadManager.downloadFile(url, downloadPath));
 
@@ -117,7 +118,7 @@ class CraftVersionManager {
   Future<void> _downloadJar(CraftClientManifestModel manifest) async {
     // download jar from manifesto
     if (!File(getJarPath(manifest.id)).existsSync()) {
-      print("Downloading jar for version ${manifest.id}");
+      BeaverLog.log("Downloading jar for version ${manifest.id}");
       final url = manifest.downloads['client']!.url;
 
       await DownloadManager.downloadFile(url, getJarPath(manifest.id));
@@ -174,13 +175,16 @@ class CraftVersionManager {
         final left = actualSize - sizeDownloaded;
         final percent = (sizeDownloaded / actualSize) * 100;
         // TODO move to query download manager
-        print("Downloading assets... ${percent.toStringAsFixed(2)}% done");
-        print(
+        BeaverLog.log(
+            "Downloading assets... ${percent.toStringAsFixed(2)}% done");
+        BeaverLog.log(
             "Left: ${(left / 1024 / 1024).toStringAsFixed(2)} MB (${(left / 1024 / 1024 / 1024).toStringAsFixed(2)} GB)");
       }
     }
 
     await Future.wait(futures);
+
+    BeaverLog.success("Assets downloaded for version ${manifest.majorVersion}");
   }
 
   /// Ensure installation by downloading missing files if necessary.
@@ -203,6 +207,6 @@ class CraftVersionManager {
       throw Exception("Installation incomplete for version $version");
     }
 
-    print("Installation complete for version $version. Have fun!");
+    BeaverLog.success("Installation complete for version $version. Have fun!");
   }
 }

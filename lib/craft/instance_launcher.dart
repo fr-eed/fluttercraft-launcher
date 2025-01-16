@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:fluttcraft_launcher/util/beaver.dart';
 import 'package:path/path.dart' as p;
 
 import 'craft_exports.dart';
@@ -35,7 +36,7 @@ class CraftInstanceLauncher {
     return arg.replaceAllMapped(RegExp(r"\$\{(.+?)\}"), (match) {
       final toInsert = env[match.group(1) ?? ""];
       if (toInsert == null) {
-        print("Warning: Unknown argument: $arg");
+        BeaverLog.warning("Warning: Unknown argument: $arg");
         return "";
       }
       return toInsert;
