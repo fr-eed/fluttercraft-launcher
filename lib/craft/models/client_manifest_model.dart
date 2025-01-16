@@ -23,13 +23,10 @@ class CraftDownloadModel {
   final String sha1;
   final int size;
 
-  final String? path;
-
   CraftDownloadModel({
     required this.url,
     required this.sha1,
     required this.size,
-    this.path,
   });
 
   factory CraftDownloadModel.fromJson(Map<String, dynamic> json) =>
@@ -39,11 +36,35 @@ class CraftDownloadModel {
 }
 
 @JsonSerializable(explicitToJson: true)
+class CraftLibDownloadModel extends CraftDownloadModel {
+  // path to where file should be saved
+  final String path;
+
+  CraftLibDownloadModel({
+    required super.url,
+    required super.sha1,
+    required super.size,
+    required this.path,
+  });
+
+  factory CraftLibDownloadModel.fromJson(Map<String, dynamic> json) =>
+      _$CraftLibDownloadModelFromJson(json);
+
+  @override
+  Map<String, dynamic> toJson() => _$CraftLibDownloadModelToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true)
 class LibraryDownloadsModel {
-  final CraftDownloadModel artifact;
+  final CraftLibDownloadModel? artifact;
+  final Map<String, CraftLibDownloadModel>? classifiers;
   final String? name;
 
-  LibraryDownloadsModel(this.artifact, this.name);
+  LibraryDownloadsModel({
+    this.artifact,
+    this.classifiers,
+    this.name,
+  });
 
   factory LibraryDownloadsModel.fromJson(Map<String, dynamic> json) =>
       _$LibraryDownloadsModelFromJson(json);
@@ -261,14 +282,20 @@ class CraftClientManifestModel {
   final DateTime releaseTime;
   final CraftVersionType type; // snapshop, release etc
 
-  final int complianceLevel;
+  // if null or 0 means unsafe for security reasons
+  final int? complianceLevel;
 
-  final CraftJavaVersionModel javaVersion;
+  // Sometimes not present like on 1.6.0 snapshot
+  final CraftJavaVersionModel? javaVersion;
 
   final Map<String, CraftDownloadModel> downloads;
   final List<CraftLibraryModel> libraries;
 
-  final CraftArgumentsModel arguments;
+  // either it will have arguments or minecraftArguments
+  final CraftArgumentsModel? arguments;
+
+  // legacy
+  final String? minecraftArguments;
 
   final CraftAssetIndex assetIndex;
 
@@ -278,13 +305,20 @@ class CraftClientManifestModel {
     required this.minimumLauncherVersion,
     required this.releaseTime,
     required this.type,
-    required this.complianceLevel,
-    required this.javaVersion,
+    this.complianceLevel,
+    this.javaVersion,
     required this.downloads,
     required this.libraries,
-    required this.arguments,
     required this.assetIndex,
-  });
+    this.arguments,
+    this.minecraftArguments,
+  }) {
+    // ensure it has either minecraftArguments or arguments
+    if (minecraftArguments == null && arguments == null) {
+      throw Exception(
+          'minecraftArguments or arguments must be present in manifest');
+    }
+  }
 
   factory CraftClientManifestModel.fromJson(Map<String, dynamic> json) =>
       _$CraftClientManifestModelFromJson(json);

@@ -25,10 +25,26 @@ CraftDownloadModel _$CraftDownloadModelFromJson(Map<String, dynamic> json) =>
       url: json['url'] as String,
       sha1: json['sha1'] as String,
       size: (json['size'] as num).toInt(),
-      path: json['path'] as String?,
     );
 
 Map<String, dynamic> _$CraftDownloadModelToJson(CraftDownloadModel instance) =>
+    <String, dynamic>{
+      'url': instance.url,
+      'sha1': instance.sha1,
+      'size': instance.size,
+    };
+
+CraftLibDownloadModel _$CraftLibDownloadModelFromJson(
+        Map<String, dynamic> json) =>
+    CraftLibDownloadModel(
+      url: json['url'] as String,
+      sha1: json['sha1'] as String,
+      size: (json['size'] as num).toInt(),
+      path: json['path'] as String,
+    );
+
+Map<String, dynamic> _$CraftLibDownloadModelToJson(
+        CraftLibDownloadModel instance) =>
     <String, dynamic>{
       'url': instance.url,
       'sha1': instance.sha1,
@@ -39,14 +55,23 @@ Map<String, dynamic> _$CraftDownloadModelToJson(CraftDownloadModel instance) =>
 LibraryDownloadsModel _$LibraryDownloadsModelFromJson(
         Map<String, dynamic> json) =>
     LibraryDownloadsModel(
-      CraftDownloadModel.fromJson(json['artifact'] as Map<String, dynamic>),
-      json['name'] as String?,
+      artifact: json['artifact'] == null
+          ? null
+          : CraftLibDownloadModel.fromJson(
+              json['artifact'] as Map<String, dynamic>),
+      classifiers: (json['classifiers'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(
+            k, CraftLibDownloadModel.fromJson(e as Map<String, dynamic>)),
+      ),
+      name: json['name'] as String?,
     );
 
 Map<String, dynamic> _$LibraryDownloadsModelToJson(
         LibraryDownloadsModel instance) =>
     <String, dynamic>{
-      'artifact': instance.artifact.toJson(),
+      'artifact': instance.artifact?.toJson(),
+      'classifiers':
+          instance.classifiers?.map((k, e) => MapEntry(k, e.toJson())),
       'name': instance.name,
     };
 
@@ -70,7 +95,7 @@ const _$OsTypeEnumMap = {
 const _$OsArchEnumMap = {
   OsArch.x64: 'x64',
   OsArch.x86: 'x86',
-  OsArch.arm: 'arm',
+  OsArch.arm64: 'arm64',
   OsArch.unknown: 'unknown',
 };
 
@@ -159,9 +184,11 @@ CraftClientManifestModel _$CraftClientManifestModelFromJson(
       minimumLauncherVersion: (json['minimumLauncherVersion'] as num).toInt(),
       releaseTime: DateTime.parse(json['releaseTime'] as String),
       type: $enumDecode(_$CraftVersionTypeEnumMap, json['type']),
-      complianceLevel: (json['complianceLevel'] as num).toInt(),
-      javaVersion: CraftJavaVersionModel.fromJson(
-          json['javaVersion'] as Map<String, dynamic>),
+      complianceLevel: (json['complianceLevel'] as num?)?.toInt(),
+      javaVersion: json['javaVersion'] == null
+          ? null
+          : CraftJavaVersionModel.fromJson(
+              json['javaVersion'] as Map<String, dynamic>),
       downloads: (json['downloads'] as Map<String, dynamic>).map(
         (k, e) =>
             MapEntry(k, CraftDownloadModel.fromJson(e as Map<String, dynamic>)),
@@ -169,10 +196,13 @@ CraftClientManifestModel _$CraftClientManifestModelFromJson(
       libraries: (json['libraries'] as List<dynamic>)
           .map((e) => CraftLibraryModel.fromJson(e as Map<String, dynamic>))
           .toList(),
-      arguments: CraftArgumentsModel.fromJson(
-          json['arguments'] as Map<String, dynamic>),
       assetIndex:
           CraftAssetIndex.fromJson(json['assetIndex'] as Map<String, dynamic>),
+      arguments: json['arguments'] == null
+          ? null
+          : CraftArgumentsModel.fromJson(
+              json['arguments'] as Map<String, dynamic>),
+      minecraftArguments: json['minecraftArguments'] as String?,
     );
 
 Map<String, dynamic> _$CraftClientManifestModelToJson(
@@ -184,10 +214,11 @@ Map<String, dynamic> _$CraftClientManifestModelToJson(
       'releaseTime': instance.releaseTime.toIso8601String(),
       'type': _$CraftVersionTypeEnumMap[instance.type]!,
       'complianceLevel': instance.complianceLevel,
-      'javaVersion': instance.javaVersion.toJson(),
+      'javaVersion': instance.javaVersion?.toJson(),
       'downloads': instance.downloads.map((k, e) => MapEntry(k, e.toJson())),
       'libraries': instance.libraries.map((e) => e.toJson()).toList(),
-      'arguments': instance.arguments.toJson(),
+      'arguments': instance.arguments?.toJson(),
+      'minecraftArguments': instance.minecraftArguments,
       'assetIndex': instance.assetIndex.toJson(),
     };
 

@@ -44,6 +44,15 @@ class CraftVersionModel {
   final DateTime time;
   final DateTime releaseTime;
 
+  String get majorVersion {
+    // if contains ., then split and take first 2
+    if (id.contains('.')) {
+      return ('${id.split('.')[0]}.${id.split('.')[1]}'); // 19.1 from 19.1.2
+    } else {
+      return id; // snapshot or something, idk
+    }
+  }
+
   //he SHA1 hash of the version and therefore the JSON file ID. (manifest v2)
   final String? sha1;
 

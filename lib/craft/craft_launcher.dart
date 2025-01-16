@@ -5,25 +5,22 @@ class CraftLauncher {
 
   late CraftManifestManager manifestManager;
   late CraftVersionManager versionManager;
-
+  late JreVersionManager jreVersionManager;
   CraftLauncher({
     required this.installDir,
   }) {
     manifestManager = CraftManifestManager(installDir: installDir);
     versionManager = CraftVersionManager(
         installDir: installDir, manifestManager: manifestManager);
-    init();
+
+    jreVersionManager = JreVersionManager(installDir: installDir);
   }
 
   Future<void> init() async {
-    // downlaod manifest if not downloaded
-    if (!manifestManager.isVersionssManifestV2Parsed) {
-      await manifestManager.downloadVersionManifest();
-      print("Downloaded manifest");
-    }
+    await manifestManager.downloadVersionManifest();
   }
 
-  Future<void> launch({required String craftVersion}) async {
+  Future<Process> launch({required String craftVersion}) async {
     await versionManager.ensureInstallation(craftVersion);
 
     final jarPath = versionManager.getJarPath(craftVersion);
@@ -31,8 +28,23 @@ class CraftLauncher {
     final versionManifest =
         await manifestManager.loadClientManifest(craftVersion);
 
+    final platform = JrePlatform.getSystemJreOs();
+
+    // TODO support defult java version if javaVersion not specified
+    final codeName =
+        JreComponent.fromString(versionManifest.javaVersion!.component);
+
+    await jreVersionManager.ensureRuntimeInstalled(
+        platform: platform, codeName: codeName);
+
+    final javaExecutable = jreVersionManager.findJreJavaExecutable(
+        platform: platform, codeName: codeName);
+
     final launcher = CraftInstanceLauncher(
-        manifesto: versionManifest, jarPath: jarPath, installDir: installDir);
-    launcher.launch();
+        manifesto: versionManifest,
+        jarPath: jarPath,
+        installDir: installDir,
+        javaExecutable: javaExecutable);
+    return await launcher.launch();
   }
 }
