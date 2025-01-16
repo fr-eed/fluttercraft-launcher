@@ -32,7 +32,7 @@ class BeaverLog {
 
   static Future<void> log(String message, {String color = '\x1B[0m'}) async {
     final timestamp = _getTimestamp();
-    final logMessage = '[$timestamp] [BEAVER] $message';
+    final logMessage = '[$timestamp] [LOG] $message';
 
     stdout.writeln('$color$logMessage\x1B[0m');
 
@@ -49,20 +49,20 @@ class BeaverLog {
 
   static Future<void> warning(String message) async {
     final timestamp = _getTimestamp();
-    final logMessage = '[$timestamp] [BEAVER] $message';
+    final logMessage = '[$timestamp] [WARNING] $message';
 
     stderr.writeln('\x1B[33m$logMessage\x1B[0m');
 
-    await _writeToFile('WARNING: $logMessage');
+    await _writeToFile('\$logMessage');
   }
 
   static Future<void> error(String message) async {
     final timestamp = _getTimestamp();
-    final logMessage = '[$timestamp] [BEAVER] $message';
+    final logMessage = '[$timestamp] [ERROR] $message';
 
     stderr.writeln('\x1B[31m$logMessage\x1B[0m');
 
-    await _writeToFile('ERROR: $logMessage');
+    await _writeToFile('$logMessage');
   }
 
   static Future<void> debug(String message) async {
