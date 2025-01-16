@@ -86,8 +86,6 @@ class _HomeState extends State<Home> {
                       context.go('/instances');
                     case 2:
                       context.go('/skins');
-                    case 3:
-                      context.go('/java');
                   }
                 },
                 destinations: const [
@@ -104,12 +102,8 @@ class _HomeState extends State<Home> {
                     label: Text('Skins'),
                   ),
                   NavigationRailDestination(
-                    icon: Icon(Icons.coffee),
-                    label: Text('Java'),
-                  ),
-                  NavigationRailDestination(
-                    icon: Icon(Icons.keyboard_option_key),
-                    label: Text('Mods'),
+                    icon: Icon(Icons.account_circle),
+                    label: Text('Account'),
                   ),
                   NavigationRailDestination(
                     icon: Icon(Icons.settings),

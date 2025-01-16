@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class InstancesScreen extends StatefulWidget {
+  InstancesScreen({super.key});
+
   // Dummy data
   final List<Map<String, String>> instances = [
     {
@@ -57,22 +59,30 @@ class _InstancesScreenState extends State<InstancesScreen> {
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Padding(
-                    padding: EdgeInsets.only(right: 8),
-                    child: Text(instance['lastPlayed']!),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.favorite,
-                      color: Colors.white,
+                  Text(instance['lastPlayed']!),
+                  SizedBox(width: 12),
+                  Builder(
+                    builder: (context) => ElevatedButton.icon(
+                      onPressed: () {
+                        // Handle edit instance
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        backgroundColor:
+                            Theme.of(context).colorScheme.inversePrimary,
+                      ),
+                      icon: const Icon(Icons.edit),
+                      label: Text(
+                        'Edit',
+                        style: TextStyle(
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
-                    onPressed: () {},
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.delete),
-                    onPressed: () {
-                      // Handle delete
-                    },
                   ),
                 ],
               ),
