@@ -2,6 +2,7 @@ import 'package:fluttcraft_launcher/craft/craft_exports.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
+/// Checks if any data is lost during serialization
 bool testJsonSerialization<T>(
     T object, T Function(Map<String, dynamic>) fromJson) {
   final json = (object as dynamic).toJson() as Map<String, dynamic>;
@@ -13,19 +14,16 @@ bool testJsonSerialization<T>(
 
 Future<void> main() async {
   String tmpDir = p.join(Directory.current.path, ".temp");
-  String installDir = "";
+  String installDir = p.join(tmpDir, "fluttcraft");
 
   setUpAll(() async {
-    installDir = p.join(tmpDir, "fluttcraft");
-    // get full path (not realtive)
-    installDir = p.join(Directory.current.path, installDir);
     // create dir
     Directory(installDir).createSync(recursive: true);
   });
 
   tearDownAll(() async {
     // erase everything
-    Directory(tmpDir).deleteSync(recursive: true);
+    Directory(installDir).deleteSync(recursive: true);
   });
 
   group('Craft launcher tests', () {
@@ -35,7 +33,10 @@ Future<void> main() async {
 
         final manifest = await manifestManager.downloadVersionManifest();
 
-        expect(manifest, isNotNull);
+        expect(
+            testJsonSerialization(
+                manifest, CraftVersionsManifestModel.fromJson),
+            true);
 
         // expect to have more than 10 versions
         expect(manifest.versions.length, greaterThan(10));
