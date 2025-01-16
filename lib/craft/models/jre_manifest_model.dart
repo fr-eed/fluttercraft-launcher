@@ -30,7 +30,7 @@ class JreManifestModel {
   /// Null if doesn't exist
   JreComponentModel? getComponent(
       JrePlatform platform, JreComponent component) {
-    return manifest[platform]?[component]?.first;
+    return manifest[platform]?[component]?.firstOrNull;
   }
 
   factory JreManifestModel.fromJson(Map<String, dynamic> json) =>

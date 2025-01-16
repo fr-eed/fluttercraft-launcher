@@ -64,7 +64,9 @@ class CraftVersionManager {
 
     // check every path
     for (final path in libPaths) {
-      if (!File(path).existsSync()) {
+      if (!File(path).existsSync() &&
+          !Link(path).existsSync() &&
+          !Directory(path).existsSync()) {
         return false;
       }
     }
@@ -83,7 +85,7 @@ class CraftVersionManager {
       if (lib.downloads.artifact == null) {
         continue;
       }
-      final downloadPath = pathToLib(lib.downloads.artifact!.path!);
+      final downloadPath = pathToLib(lib.downloads.artifact!.path);
       final url = lib.downloads.artifact!.url;
 
       if (File(downloadPath).existsSync()) {

@@ -12,10 +12,11 @@ bool testJsonSerialization<T>(
 }
 
 Future<void> main() async {
+  String tmpDir = p.join(Directory.current.path, ".temp");
   String installDir = "";
 
   setUpAll(() async {
-    installDir = p.join(".temp", "fluttcraft");
+    installDir = p.join(tmpDir, "fluttcraft");
     // get full path (not realtive)
     installDir = p.join(Directory.current.path, installDir);
     // create dir
@@ -24,7 +25,7 @@ Future<void> main() async {
 
   tearDownAll(() async {
     // erase everything
-    Directory(installDir).deleteSync(recursive: true);
+    Directory(tmpDir).deleteSync(recursive: true);
   });
 
   group('Craft launcher tests', () {
@@ -95,12 +96,18 @@ Future<void> main() async {
         }
 
         expect(count, greaterThan(10));
-      });
+      }, timeout: Timeout(Duration(minutes: 1)));
     });
     group("SimpleUsage", () {
       test("Launch", () async {
-        const craftVersion = "1.20.4";
         final launcher = CraftLauncher(installDir: installDir);
+
+        await launcher.init();
+
+        final manifest = launcher.manifestManager.versionsManifestV2;
+
+        final craftVersion = manifest!.latest.release;
+
         final process = await launcher.launch(craftVersion: craftVersion);
 
         // await 10 seoconds
@@ -114,6 +121,12 @@ Future<void> main() async {
             .transform(const LineSplitter())
             .forEach(print);
 
+        // aslo print stdout
+        /*await process.stdout
+            .transform(utf8.decoder)
+            .transform(const LineSplitter())
+            .forEach(print);
+          */
         expect(await process.exitCode, 128 + ProcessSignal.sigint.signalNumber);
       }, timeout: Timeout(Duration(minutes: 10)));
     });

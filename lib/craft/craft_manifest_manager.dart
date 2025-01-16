@@ -14,6 +14,10 @@ class CraftManifestManager {
     if (isVersionssManifestV2Parsed) {
       loadVersionManifest().then((value) {
         versionsManifestV2 = value;
+      }).catchError((e) {
+        // del that file
+        File(versionManifestV2Path()).deleteSync();
+        print("Failed to load version_manifest_v2.json. $e");
       });
     }
   }

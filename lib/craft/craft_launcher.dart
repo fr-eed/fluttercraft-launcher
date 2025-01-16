@@ -14,7 +14,6 @@ class CraftLauncher {
         installDir: installDir, manifestManager: manifestManager);
 
     jreVersionManager = JreVersionManager(installDir: installDir);
-    init();
   }
 
   Future<void> init() async {

@@ -60,7 +60,8 @@ class JreVersionManager {
       {required JrePlatform platform, required JreComponent codeName}) async {
     final componenInfo = _manifest.getComponent(platform, codeName);
     if (componenInfo == null) {
-      throw Exception("JRE component not found");
+      throw Exception(
+          "JRE component not found for ${platform.name} ${codeName.name}");
     }
 
     // download manifest from url if not downloaded
