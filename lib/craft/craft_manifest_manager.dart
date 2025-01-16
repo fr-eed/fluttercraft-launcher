@@ -1,3 +1,4 @@
+import 'package:fluttcraft_launcher/util/beaver.dart';
 import 'package:path/path.dart' as p;
 
 import 'craft_exports.dart';
@@ -17,7 +18,7 @@ class CraftManifestManager {
       }).catchError((e) {
         // del that file
         File(versionManifestV2Path()).deleteSync();
-        print("Failed to load version_manifest_v2.json. $e");
+        BeaverLog.error("Failed to load version_manifest_v2.json. $e");
       });
     }
   }

@@ -1,4 +1,5 @@
 import 'package:fluttcraft_launcher/craft/craft_exports.dart';
+import 'package:fluttcraft_launcher/util/beaver.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
@@ -70,7 +71,7 @@ Future<void> main() async {
           if ((version.type == CraftVersionType.release) ||
               (version.type == CraftVersionType.snapshot &&
                   !majorSnapshotChecked)) {
-            print("checked ${version.id}");
+            BeaverLog.log("checked version ${version.id}");
             final clientManifest =
                 await manifestManager.downloadClientManifest(version.id);
 
@@ -117,18 +118,17 @@ Future<void> main() async {
         process
             .kill(ProcessSignal.sigint); // ctrl+c closes the process gracefully
         // print stream of process
-        await process.stderr
-            .transform(utf8.decoder)
-            .transform(const LineSplitter())
-            .forEach(print);
+        final exitCode = await process.exitCode;
 
-        // aslo print stdout
-        /*await process.stdout
-            .transform(utf8.decoder)
-            .transform(const LineSplitter())
-            .forEach(print);
-          */
-        expect(await process.exitCode, 128 + ProcessSignal.sigint.signalNumber);
+        if (exitCode != 128 + ProcessSignal.sigint.signalNumber) {
+          await process.stderr
+              .transform(utf8.decoder)
+              .transform(const LineSplitter())
+              .forEach(BeaverLog.error);
+          expect(
+              await process.exitCode, 128 + ProcessSignal.sigint.signalNumber,
+              reason: "Process exited with unexpected exit code");
+        }
       }, timeout: Timeout(Duration(minutes: 10)));
     });
   });

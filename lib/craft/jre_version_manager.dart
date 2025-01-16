@@ -1,3 +1,4 @@
+import 'package:fluttcraft_launcher/util/beaver.dart';
 import 'package:path/path.dart' as p;
 
 import 'craft_exports.dart';
@@ -43,12 +44,21 @@ class JreVersionManager {
         json.decode(await File(manifestFile).readAsString())
             as Map<String, dynamic>);
 
+    final downloadDir =
+        getRuntimeFolderPath(platform: platform, codeName: codeName);
+
     // check every path
     for (final item in manifesto.files.entries) {
+      final filepath = p.join(downloadDir, item.key);
       if (item.value.type == JreFSItemType.directory) {
         continue;
       }
-      if (!File(item.key).existsSync()) {
+      if (item.value.type == JreFSItemType.link) {
+        if (!Link(filepath).existsSync()) {
+          return false;
+        }
+      }
+      if (!File(filepath).existsSync()) {
         return false;
       }
     }
@@ -87,6 +97,9 @@ class JreVersionManager {
       await _ensureExecutablePermissions(manifesto,
           codeName: codeName, platform: platform);
     }
+
+    BeaverLog.success(
+        "JRE version ${codeName.name} ${componenInfo.version['name']} for ${platform.name} installed ");
   }
 
   Future<void> _setExecutablePermissions(String filePath) async {
@@ -112,11 +125,14 @@ class JreVersionManager {
           item.value.executable == true) {
         final downloadPath = p.join(downloadFolder, item.key);
         // chmod his file
-        print(
+        BeaverLog.log(
             "Setting executable permissions for ${item.key} for jre version ${codeName.name}");
         await _setExecutablePermissions(downloadPath);
       }
     }
+
+    BeaverLog.success(
+        "Executable permissions set for jre version ${codeName.name}");
   }
 
   Future<void> _downloadJreFiles(
@@ -145,7 +161,8 @@ class JreVersionManager {
           continue;
         }
 
-        print("Creating symlink ${item.key} for jre version ${codeName.name}");
+        BeaverLog.log(
+            "Creating symlink ${item.key} for jre version ${codeName.name}");
         // create symlink
 
         final linkFile = Link(linkPath);
@@ -161,7 +178,8 @@ class JreVersionManager {
         continue;
       }
 
-      print("Downloading File ${item.key} for jre version ${codeName.name}");
+      BeaverLog.log(
+          "Downloading File ${item.key} for jre version ${codeName.name}");
 
       futures.add(DownloadManager.downloadFile(url, downloadPath));
 
@@ -172,6 +190,9 @@ class JreVersionManager {
     }
 
     await Future.wait(futures);
+
+    BeaverLog.success(
+        "Finished downloading files for jre version ${codeName.name}");
   }
 
   String findJreJavaExecutable(
