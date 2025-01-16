@@ -30,9 +30,10 @@ class BeaverLog {
     }
   }
 
-  static Future<void> log(String message, {String color = '\x1B[0m'}) async {
+  static Future<void> log(String message,
+      {String color = '\x1B[0m', String? tag}) async {
     final timestamp = _getTimestamp();
-    final logMessage = '[$timestamp] [LOG] $message';
+    final logMessage = '[$timestamp] [${tag ?? 'LOG'}] $message';
 
     stdout.writeln('$color$logMessage\x1B[0m');
 
@@ -40,11 +41,11 @@ class BeaverLog {
   }
 
   static Future<void> info(String message) async {
-    await log(message, color: '\x1B[34m');
+    await log(message, color: '\x1B[34m', tag: 'INFO');
   }
 
   static Future<void> success(String message) async {
-    await log(message, color: '\x1B[32m');
+    await log(message, color: '\x1B[32m', tag: 'SUCCESS');
   }
 
   static Future<void> warning(String message) async {
