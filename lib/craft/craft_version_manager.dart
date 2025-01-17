@@ -1,4 +1,3 @@
-import 'package:fluttcraft_launcher/util/beaver.dart';
 import 'package:path/path.dart' as p;
 
 import 'craft_exports.dart';
@@ -78,9 +77,9 @@ class CraftVersionManager {
   Future<void> _downloadLibs(CraftClientManifestModel manifest) async {
     final currentOs = CraftOsModel.currentOs();
     final currentFeatures = CraftFeatureModel({});
-    // check every path
-    List<Future> futures = [];
-    const chunkSize = 30;
+
+    List<PDREntry> entriesToDownload = [];
+
     for (final lib in manifest.libraries) {
       // skip if no artifact
       if (lib.downloads.artifact == null) {
@@ -97,31 +96,25 @@ class CraftVersionManager {
             os: currentOs,
             features: currentFeatures,
           ))) {
-        BeaverLog.log(
-            "Skipping ${lib.name} for version ${manifest.id} because incompatible");
+        //BeaverLog.log(
+        //     "Skipping ${lib.name} for version ${manifest.id} because incompatible");
         continue;
       }
 
-      BeaverLog.log("Downloading lib ${lib.name} for version ${manifest.id}");
-
-      futures.add(DownloadManager.downloadFile(url, downloadPath));
-
-      if (futures.length > chunkSize) {
-        await Future.wait(futures.take(chunkSize));
-        futures = futures.skip(chunkSize).toList();
-      }
+      entriesToDownload
+          .add(PDREntry(url, downloadPath, size: lib.downloads.artifact!.size));
     }
 
-    await Future.wait(futures);
+    await PDRaDSA.batchDownload(entriesToDownload,
+        name: "Libraries for version ${manifest.id}");
   }
 
   Future<void> _downloadJar(CraftClientManifestModel manifest) async {
     // download jar from manifesto
     if (!File(getJarPath(manifest.id)).existsSync()) {
-      BeaverLog.log("Downloading jar for version ${manifest.id}");
       final url = manifest.downloads['client']!.url;
-
-      await DownloadManager.downloadFile(url, getJarPath(manifest.id));
+      await PDRaDSA.singleDownload(PDREntry(url, getJarPath(manifest.id)),
+          name: "Jar for version ${manifest.id}");
     }
   }
 
@@ -130,10 +123,13 @@ class CraftVersionManager {
     final indexUrl = manifest.assetIndex.url;
     // download is done to assets/indexes/{version}.json
 
-    await DownloadManager.downloadFile(
-        indexUrl,
-        p.join(
-            installDir, 'assets', 'indexes', '${manifest.majorVersion}.json'));
+    await PDRaDSA.singleDownload(
+        PDREntry(
+            indexUrl,
+            p.join(installDir, 'assets', 'indexes',
+                '${manifest.majorVersion}.json')),
+        immediate: true,
+        name: "Asset index manifest for version ${manifest.id}");
 
     // read that file
     final index = jsonDecode(File(p.join(
@@ -143,11 +139,8 @@ class CraftVersionManager {
     final assetIndex =
         CraftAssetIndexModel.fromJson(index as Map<String, dynamic>);
 
-    List<Future> futures = [];
-    const chunkSize = 200;
+    List<PDREntry> entriesToDownload = [];
 
-    final actualSize = assetIndex.objects.values.fold(0, (a, b) => a + b.size);
-    int sizeDownloaded = 0;
     // download every asset
     for (final asset in assetIndex.objects.entries) {
       final hash = asset.value.hash;
@@ -163,28 +156,11 @@ class CraftVersionManager {
       //print(
       //    "Downloading asset ${asset.key} for version ${manifest.majorVersion}");
 
-      futures.add(DownloadManager.downloadFile(url, path));
-
-      sizeDownloaded += asset.value.size;
-
-      // if futures > chunkSize
-      while (futures.length > chunkSize) {
-        await Future.wait(futures.take(1));
-        futures = futures.skip(1).toList();
-        // calculate how much left and draw a progressbar
-        final left = actualSize - sizeDownloaded;
-        final percent = (sizeDownloaded / actualSize) * 100;
-        // TODO move to query download manager
-        BeaverLog.log(
-            "Downloading assets... ${percent.toStringAsFixed(2)}% done");
-        BeaverLog.log(
-            "Left: ${(left / 1024 / 1024).toStringAsFixed(2)} MB (${(left / 1024 / 1024 / 1024).toStringAsFixed(2)} GB)");
-      }
+      entriesToDownload.add(PDREntry(url, path, size: asset.value.size));
     }
 
-    await Future.wait(futures);
-
-    BeaverLog.success("Assets downloaded for version ${manifest.majorVersion}");
+    await PDRaDSA.batchDownload(entriesToDownload,
+        name: "Assets for version ${manifest.majorVersion}");
   }
 
   /// Ensure installation by downloading missing files if necessary.

@@ -33,6 +33,8 @@ enum JreComponent {
   @JsonValue("other")
   other;
 
+  static JreComponent get currentUniversal => JreComponent.javaRuntimeGamma;
+
   String get name {
     return _$JreComponentEnumMap[this]!;
   }

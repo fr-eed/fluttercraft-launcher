@@ -1,4 +1,3 @@
-import 'package:fluttcraft_launcher/util/beaver.dart';
 import 'package:path/path.dart' as p;
 
 import 'craft_exports.dart';
@@ -60,9 +59,9 @@ class CraftManifestManager {
 
   // download manifest from https://piston-meta.mojang.com/mc/game/version_manifest_v2.json
   Future<CraftVersionsManifestModel> downloadVersionManifest() async {
-    await DownloadManager.downloadFile(
+    await PDRaDSA.singleDownload(PDREntry(
         'https://piston-meta.mojang.com/mc/game/version_manifest_v2.json',
-        versionManifestV2Path());
+        versionManifestV2Path()));
 
     isVersionssManifestV2Parsed = true;
 
@@ -79,8 +78,9 @@ class CraftManifestManager {
     final version = versionsManifestV2!.versions
         .firstWhere((element) => element.id == craftVersion);
 
-    await DownloadManager.downloadFile(
-        version.url, clientManifestPath(craftVersion));
+    await PDRaDSA.singleDownload(
+        PDREntry(version.url, clientManifestPath(craftVersion)));
+
     return loadClientManifest(craftVersion);
   }
 }

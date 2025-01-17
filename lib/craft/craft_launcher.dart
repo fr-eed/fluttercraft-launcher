@@ -17,6 +17,7 @@ class CraftLauncher {
   }
 
   Future<void> init() async {
+    // Update manifest to latest
     await manifestManager.downloadVersionManifest();
   }
 
@@ -31,8 +32,10 @@ class CraftLauncher {
     final platform = JrePlatform.getSystemJreOs();
 
     // TODO support defult java version if javaVersion not specified
-    final codeName =
-        JreComponent.fromString(versionManifest.javaVersion!.component);
+    // probably find similar version or craft or inherit field
+    final codeName = versionManifest.javaVersion != null
+        ? JreComponent.fromString(versionManifest.javaVersion!.component)
+        : JreComponent.currentUniversal;
 
     await jreVersionManager.ensureRuntimeInstalled(
         platform: platform, codeName: codeName);
