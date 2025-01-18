@@ -9,8 +9,8 @@ class CraftVersionManager {
   CraftVersionManager(
       {required this.installDir, required this.manifestManager});
 
-  /// Get a list of valid versions with existing manifests.
-  List<String> getValidVersions() {
+  /// Read version list from versions folder. Might include both downloaded, touched and externally imported versions
+  List<String> getTouchedVersions() {
     final versionsDir = Directory(p.join(installDir, 'versions'));
 
     if (!versionsDir.existsSync()) {
@@ -88,10 +88,6 @@ class CraftVersionManager {
       final downloadPath = pathToLib(lib.downloads.artifact!.path);
       final url = lib.downloads.artifact!.url;
 
-      if (File(downloadPath).existsSync()) {
-        continue;
-      }
-
       if (!lib.rules.every((e) => e.isAllowed(
             os: currentOs,
             features: currentFeatures,
@@ -101,8 +97,18 @@ class CraftVersionManager {
         continue;
       }
 
-      entriesToDownload
-          .add(PDREntry(url, downloadPath, size: lib.downloads.artifact!.size));
+      final fileEntry = PDREntry(
+        url,
+        downloadPath,
+        size: lib.downloads.artifact!.size,
+        sha1Hash: lib.downloads.artifact!.sha1,
+      );
+
+      if (await fileEntry.validateFileSelf()) {
+        continue; // already downloaded with right hash
+      }
+
+      entriesToDownload.add(fileEntry);
     }
 
     await PDRaDSA.batchDownload(entriesToDownload,
@@ -110,12 +116,23 @@ class CraftVersionManager {
   }
 
   Future<void> _downloadJar(CraftClientManifestModel manifest) async {
-    // download jar from manifesto
-    if (!File(getJarPath(manifest.id)).existsSync()) {
-      final url = manifest.downloads['client']!.url;
-      await PDRaDSA.singleDownload(PDREntry(url, getJarPath(manifest.id)),
-          name: "Jar for version ${manifest.id}");
+    final url = manifest.downloads['client']!.url;
+    final size = manifest.downloads['client']!.size;
+    final sha1 = manifest.downloads['client']!.sha1;
+
+    final fileEntry = PDREntry(
+      url,
+      getJarPath(manifest.id),
+      size: size,
+      sha1Hash: sha1,
+    );
+
+    if (await fileEntry.validateFileSelf()) {
+      return; // already downloaded with right hash
     }
+
+    await PDRaDSA.singleDownload(fileEntry,
+        name: "Jar for version ${manifest.id}");
   }
 
   Future<void> _downloadAssets(CraftClientManifestModel manifest) async {
@@ -123,13 +140,18 @@ class CraftVersionManager {
     final indexUrl = manifest.assetIndex.url;
     // download is done to assets/indexes/{version}.json
 
-    await PDRaDSA.singleDownload(
-        PDREntry(
-            indexUrl,
-            p.join(installDir, 'assets', 'indexes',
-                '${manifest.majorVersion}.json')),
-        immediate: true,
-        name: "Asset index manifest for version ${manifest.id}");
+    final indexManifestEntry = PDREntry(
+      indexUrl,
+      p.join(installDir, 'assets', 'indexes', '${manifest.majorVersion}.json'),
+      size: manifest.assetIndex.size,
+      sha1Hash: manifest.assetIndex.sha1,
+    );
+
+    if (!await indexManifestEntry.validateFileSelf()) {
+      await PDRaDSA.singleDownload(indexManifestEntry,
+          immediate: true,
+          name: "Asset index manifest for version ${manifest.id}");
+    }
 
     // read that file
     final index = jsonDecode(File(p.join(
@@ -146,17 +168,22 @@ class CraftVersionManager {
       final hash = asset.value.hash;
       final hashId = hash.substring(0, 2);
 
-      final path = p.join(installDir, 'assets', 'objects', hashId, hash);
+      final downloadPath =
+          p.join(installDir, 'assets', 'objects', hashId, hash);
       final url = "https://resources.download.minecraft.net/$hashId/$hash";
+
+      final fileEntry = PDREntry(
+        url,
+        downloadPath,
+        size: asset.value.size,
+        sha1Hash: hash,
+      );
       // check if exists
-      if (File(path).existsSync()) {
-        continue;
+      if (await fileEntry.validateFileSelf()) {
+        continue; // already downloaded with right hash
       }
 
-      //print(
-      //    "Downloading asset ${asset.key} for version ${manifest.majorVersion}");
-
-      entriesToDownload.add(PDREntry(url, path, size: asset.value.size));
+      entriesToDownload.add(fileEntry);
     }
 
     await PDRaDSA.batchDownload(entriesToDownload,

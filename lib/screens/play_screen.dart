@@ -109,6 +109,8 @@ class PlayScreen extends StatelessWidget {
                               BeaverLog.info('Beaver may have log.');
                               BeaverLog.warning('Beaver is low on log.');
                               BeaverLog.success('Do you have any log?');
+                              BeaverLog.error('Beaver has error.');
+                              BeaverLog.debug('Beaver is debugging.');
                             },
                             icon: const Icon(Icons.play_arrow),
                             label: const Text('Launch'),

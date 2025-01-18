@@ -32,7 +32,10 @@ class JreVersionManager {
     final manifestFile =
         p.join(installDir, 'runtime', 'manifests', componenInfo.manifest.sha1);
 
-    if (!File(manifestFile).existsSync()) {
+    if (!await PDREntry("", manifestFile,
+            size: componenInfo.manifest.size,
+            sha1Hash: componenInfo.manifest.sha1)
+        .validateFileSelf()) {
       return false;
     }
 
@@ -51,18 +54,26 @@ class JreVersionManager {
       final filepath = p.join(downloadDir, item.key);
       if (item.value.type == JreFSItemType.directory) {
         continue;
-      }
-      if (item.value.type == JreFSItemType.link) {
+      } else if (item.value.type == JreFSItemType.link) {
         if (!Link(filepath).existsSync()) {
           return false;
         }
-      }
-      if (!File(filepath).existsSync()) {
+      } else if (await PDREntry("", filepath,
+              size: item.value.downloads!.raw.size)
+          .validateExistanceSelf()) {
         return false;
       }
     }
 
     return true;
+  }
+
+  String getJreDownloadManifestPath({
+    required JrePlatform platform,
+    required JreComponent codeName,
+  }) {
+    return p.join(installDir, 'runtime', 'manifests',
+        _manifest.getComponent(platform, codeName)!.manifest.sha1);
   }
 
   Future<void> ensureRuntimeInstalled(
@@ -74,13 +85,20 @@ class JreVersionManager {
     }
 
     // download manifest from url if not downloaded
-    final manifestFile =
-        p.join(installDir, 'runtime', 'manifests', componenInfo.manifest.sha1);
+    final downloadManifestoPath =
+        getJreDownloadManifestPath(platform: platform, codeName: codeName);
 
-    if (!File(manifestFile).existsSync()) {
+    final manifestoEntry = PDREntry(
+      componenInfo.manifest.url,
+      downloadManifestoPath,
+      size: componenInfo.manifest.size,
+      sha1Hash: componenInfo.manifest.sha1,
+    );
+
+    if (!await manifestoEntry.validateFileSelf()) {
       // download
       await PDRaDSA.singleDownload(
-        PDREntry(componenInfo.manifest.url, manifestFile),
+        manifestoEntry,
         immediate: true,
         name: "JRE Manifest for ${platform.name} ${codeName.name}",
       );
@@ -89,7 +107,7 @@ class JreVersionManager {
     // TODO cache in jre manifest manager
 
     final manifesto = JreDownloadManifestModel.fromJson(
-        json.decode(await File(manifestFile).readAsString())
+        json.decode(await File(downloadManifestoPath).readAsString())
             as Map<String, dynamic>);
 
     await _downloadJreFiles(manifesto, codeName: codeName, platform: platform);
@@ -154,7 +172,7 @@ class JreVersionManager {
     for (final item in manifest.files.entries) {
       // skip if dir
       if (item.value.type == JreFSItemType.directory) {
-        continue;
+        continue; // automatically created if needed
       }
 
       if (item.value.type == JreFSItemType.link) {
@@ -166,25 +184,27 @@ class JreVersionManager {
           continue;
         }
 
-        //BeaverLog.log(
-        //    "Creating symlink ${item.key} for jre version ${codeName.name}");
-        // create symlink
-
         final linkFile = Link(linkPath);
         await linkFile.create(targetPath, recursive: true);
         continue;
       }
 
       final downloadPath = p.join(downloadFolder, item.key);
-
       final url = item.value.downloads!.raw.url;
 
-      if (File(downloadPath).existsSync()) {
+      final fileEntry = PDREntry(
+        url,
+        downloadPath,
+        size: item.value.downloads!.raw.size,
+        sha1Hash: item.value.downloads!.raw.sha1,
+      );
+
+      if (await fileEntry.validateFileSelf()) {
+        // do not download
         continue;
       }
 
-      entriesToDownload.add(
-          PDREntry(url, downloadPath, size: item.value.downloads!.raw.size));
+      entriesToDownload.add(fileEntry);
     }
 
     await PDRaDSA.batchDownload(entriesToDownload,
@@ -206,5 +226,29 @@ class JreVersionManager {
       return p.join(jreFolder, "bin", "java.exe");
     }
     return p.join(jreFolder, "bin", "java");
+  }
+
+  /// Robust way of finding jre executable. Needs manifest to be downloaded
+  Future<String> findJreExecutableByManifest(
+      {required JrePlatform platform, required JreComponent codeName}) async {
+    final downloadManifestoPath =
+        getJreDownloadManifestPath(platform: platform, codeName: codeName);
+    final manifesto = JreDownloadManifestModel.fromJson(
+        json.decode(await File(downloadManifestoPath).readAsString())
+            as Map<String, dynamic>);
+
+    // get platform folder
+    final jreFolder =
+        getRuntimeFolderPath(platform: platform, codeName: codeName);
+
+    for (final item in manifesto.files.entries) {
+      if (item.value.executable == true &&
+          (item.key.endsWith('/java') || item.key.endsWith('/java.exe'))) {
+        return p.join(jreFolder, item.key);
+      }
+    }
+
+    throw Exception(
+        'No executable java file found in jre version ${codeName.name} for ${platform.name}');
   }
 }

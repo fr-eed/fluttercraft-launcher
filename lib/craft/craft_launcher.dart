@@ -40,7 +40,7 @@ class CraftLauncher {
     await jreVersionManager.ensureRuntimeInstalled(
         platform: platform, codeName: codeName);
 
-    final javaExecutable = jreVersionManager.findJreJavaExecutable(
+    final javaExecutable = await jreVersionManager.findJreExecutableByManifest(
         platform: platform, codeName: codeName);
 
     final launcher = CraftInstanceLauncher(

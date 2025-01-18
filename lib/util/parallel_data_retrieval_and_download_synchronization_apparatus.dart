@@ -60,16 +60,16 @@ class PDREntry {
   PDREntry(this.url, this.path, {this.size, this.isExecutable, this.sha1Hash});
 
   /// Validates if file exists and if has proper size
-  static Future<bool> validateExistance(PDREntry entry) async {
-    final file = File(entry.path);
+  Future<bool> validateExistanceSelf() async {
+    final file = File(path);
 
-    if (!file.existsSync()) {
+    if (!await file.exists()) {
       // no file
       return false;
     }
     // check filesize
-    if (entry.size != null) {
-      if (file.lengthSync() != entry.size) {
+    if (size != null) {
+      if (await file.length() != size) {
         return false;
       }
     }
@@ -78,21 +78,21 @@ class PDREntry {
   }
 
   /// Validates if file exists, if has proper size and sha1 hash
-  static Future<bool> validateFile(PDREntry entry) async {
-    final file = File(entry.path);
-    final existance = await validateExistance(entry);
+  Future<bool> validateFileSelf() async {
+    final file = File(path);
+    final existance = await validateExistanceSelf();
 
     if (!existance) {
       return false;
     }
 
     // sha1 check
-    if (entry.sha1Hash != null) {
+    if (sha1Hash != null) {
       final fileBytes = await file.readAsBytes();
       final fileSha1Hash = sha1.convert(fileBytes).toString();
 
       // invalid hash
-      if (fileSha1Hash != entry.sha1Hash) {
+      if (fileSha1Hash != sha1Hash) {
         return false;
       }
     }
@@ -114,7 +114,6 @@ class PDREntry {
 
     await for (var chunk in stream) {
       if (isAborted) {
-        BeaverLog.warning("Download of ${p.basename(path)} aborted");
         client.close();
         await sink.close();
         // del file if exists
@@ -137,6 +136,7 @@ class PDREntry {
     client.close();
   }
 
+  /// Download file. report back progress using [onChunkBytes] and [onCompleted]
   Future<void> downloadSelf(
       {void Function(int chunkBytes)? onChunkBytes,
       void Function(bool isCompleted)? onCompleted}) async {
@@ -288,6 +288,9 @@ class ParallelDataRetrievalAndDownloadSynchronizationApparatus {
 
   static Future<void> batchDownload(List<PDREntry> entries,
       {String? name}) async {
+    if (entries.isEmpty) {
+      return Future.value(); // empty
+    }
     ensureMainLoopIsRunning();
     final batch = PDRBatch(name ?? "Batch of ${entries.length} files", entries);
     queue.add(batch);
