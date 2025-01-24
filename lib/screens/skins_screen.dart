@@ -5,6 +5,13 @@ import 'dart:async';
 class SkinGridScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    const List<(String, String)> skins = [
+      ("Grandpa", "https://fc-skins.pages.dev/grandpa.png"),
+      ("May", "https://fc-skins.pages.dev/may.png"),
+      ("Paz", "https://fc-skins.pages.dev/paz.png"),
+      ("Soldier", "https://fc-skins.pages.dev/soldier.png"),
+    ];
+
     return Scaffold(
       body: GridView.builder(
         padding: const EdgeInsets.all(8.0),
@@ -14,7 +21,7 @@ class SkinGridScreen extends StatelessWidget {
           mainAxisSpacing: 10,
           childAspectRatio: 0.8,
         ),
-        itemCount: 4, // Replace with actual skin count
+        itemCount: skins.length, // Replace with actual skin count
         itemBuilder: (context, index) {
           return Stack(
             children: [
@@ -32,13 +39,14 @@ class SkinGridScreen extends StatelessWidget {
                   children: [
                     Expanded(
                       child: MinecraftSkinViewer(
-                        skinUrl:
-                            'https://i.ibb.co/xzfp3x6/skin-placeholder.png',
+                        skinUrl: skins[index].$2,
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text('Skin ${index + 1}'),
+                      child: Text(
+                        skins[index].$1,
+                      ),
                     ),
                   ],
                 ),
@@ -179,12 +187,12 @@ class MinecraftSkinPainter extends CustomPainter {
   void _drawArms(Canvas canvas, Paint paint) {
     // Left arm
     final leftArmSrc = Rect.fromLTWH(44, 20, 4, 12);
-    final leftArmDst = Rect.fromLTWH(-32, -20, 15, 60);
+    final leftArmDst = Rect.fromLTWH(-35, -20, 15, 60);
     canvas.drawImageRect(skin, leftArmSrc, leftArmDst, paint);
 
     // Right arm
     final rightArmSrc = Rect.fromLTWH(44, 20, 4, 12);
-    final rightArmDst = Rect.fromLTWH(22, -20, 15, 60);
+    final rightArmDst = Rect.fromLTWH(20, -20, 15, 60);
     canvas.drawImageRect(skin, rightArmSrc, rightArmDst, paint);
   }
 
