@@ -1,17 +1,30 @@
-import 'package:fluttcraft_launcher/screens/java_config_screen.dart';
-import 'package:fluttcraft_launcher/screens/play_screen.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'cubits/settings_cubit.dart';
+// Flutter framework
 import 'package:flutter/material.dart';
-import 'package:window_manager/window_manager.dart';
-import 'constants.dart';
-import 'home.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+// Navigation
 import 'package:go_router/go_router.dart';
-import 'screens/instance_screen.dart';
+
+// State management & persistence
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:path_provider/path_provider.dart';
+
+// Window management
+import 'package:window_manager/window_manager.dart';
+
+import 'package:protocol_handler/protocol_handler.dart';
+
+// Screen imports
+import 'screens/instance_screen.dart';
+import 'screens/play_screen.dart';
 import 'screens/skins_screen.dart';
-import 'screens/java_config_screen.dart';
+import 'screens/auth_screen.dart';
+
+// Local imports
+import 'constants.dart';
+import 'cubits/settings_cubit.dart';
+import 'home.dart';
+import 'cubits/auth_cubit.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -46,11 +59,17 @@ final GoRouter _router = GoRouter(
           },
         ),
         GoRoute(
-          path: '/java',
+          path: '/auth',
           builder: (context, state) {
-            return JavaConfigScreen();
+            return AuthScreen();
           },
         ),
+        // GoRoute(
+        //   path: '/java',
+        //   builder: (context, state) {
+        //     return JavaConfigScreen();
+        //   },
+        // ),
       ],
     ),
   ],
@@ -84,6 +103,9 @@ Future<ColorScheme?> initializeColorScheme(
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await protocolHandler.register('fluttercraft');
+
   HydratedBloc.storage = await HydratedStorage.build(
     storageDirectory: HydratedStorageDirectory(
       (await getTemporaryDirectory()).path,
@@ -104,8 +126,11 @@ class Main extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<SettingsCubit>(
-          create: (BuildContext context) => SettingsCubit(),
+          create: (context) => SettingsCubit(),
         ),
+        BlocProvider<AuthCubit>(
+          create: (context) => AuthCubit(),
+        )
       ],
       child: App(),
     );

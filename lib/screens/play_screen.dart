@@ -4,6 +4,7 @@ import 'package:fluttcraft_launcher/constants.dart';
 import 'package:fluttcraft_launcher/cubits/settings_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../auth/microsoft_auth.dart';
 import '../util/beaver.dart';
 
 class PlayScreen extends StatelessWidget {
@@ -104,14 +105,7 @@ class PlayScreen extends StatelessWidget {
                           bottom: 16,
                           right: 16,
                           child: FloatingActionButton.extended(
-                            onPressed: () {
-                              BeaverLog.log('Beaver initialized.');
-                              BeaverLog.info('Beaver may have log.');
-                              BeaverLog.warning('Beaver is low on log.');
-                              BeaverLog.success('Do you have any log?');
-                              BeaverLog.error('Beaver has error.');
-                              BeaverLog.debug('Beaver is debugging.');
-                            },
+                            onPressed: () async {},
                             icon: const Icon(Icons.play_arrow),
                             label: const Text('Launch'),
                           ),

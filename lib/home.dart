@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'cubits/settings_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:protocol_handler/protocol_handler.dart';
 
 import 'constants.dart';
 
@@ -61,8 +62,8 @@ class _HomeState extends State<Home> {
 
   @override
   void initState() {
-    super.initState();
     _selectedIndex = widget.index;
+    super.initState();
   }
 
   @override
@@ -86,6 +87,8 @@ class _HomeState extends State<Home> {
                       context.go('/instances');
                     case 2:
                       context.go('/skins');
+                    case 3:
+                      context.go('/auth');
                   }
                 },
                 destinations: const [
