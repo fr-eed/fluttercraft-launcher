@@ -1,47 +1,10 @@
 // Copyright 2021 The Flutter team. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-
-import 'package:fluttcraft_launcher/ui/navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'cubits/settings_cubit.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:protocol_handler/protocol_handler.dart';
-
-import 'constants.dart';
-
-class ImageThemeMenuItem extends StatelessWidget {
-  final String imgPath;
-  final String name;
-
-  const ImageThemeMenuItem({
-    required this.imgPath,
-    required this.name,
-    super.key,
-  });
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(4.0),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8.0),
-            child: Image.asset(
-              imgPath,
-              width: 36,
-              height: 36,
-              fit: BoxFit.cover,
-            ),
-          ),
-        ),
-        const SizedBox(width: 14),
-        Text(name),
-      ],
-    );
-  }
-}
 
 class Home extends StatefulWidget {
   final Widget child;
@@ -62,8 +25,28 @@ class _HomeState extends State<Home> {
 
   @override
   void initState() {
-    _selectedIndex = widget.index;
     super.initState();
+    _selectedIndex = widget.index;
+  }
+
+  void _handleNavigation(int index) {
+    setState(() => _selectedIndex = index);
+    _navigateToRoute(index);
+  }
+
+  void _navigateToRoute(int index) {
+    final routes = {
+      0: '/home',
+      1: '/instances',
+      2: '/skins',
+      3: '/auth',
+      4: '/settings',
+    };
+
+    final route = routes[index];
+    if (route != null) {
+      context.go(route);
+    }
   }
 
   @override
@@ -76,21 +59,7 @@ class _HomeState extends State<Home> {
             children: [
               NavigationRail(
                 labelType: NavigationRailLabelType.all,
-                onDestinationSelected: (index) {
-                  setState(() {
-                    _selectedIndex = index;
-                  });
-                  switch (index) {
-                    case 0:
-                      context.go('/home');
-                    case 1:
-                      context.go('/instances');
-                    case 2:
-                      context.go('/skins');
-                    case 3:
-                      context.go('/auth');
-                  }
-                },
+                onDestinationSelected: _handleNavigation,
                 destinations: const [
                   NavigationRailDestination(
                     icon: Icon(Icons.videogame_asset),
@@ -114,96 +83,36 @@ class _HomeState extends State<Home> {
                   ),
                 ],
                 selectedIndex: _selectedIndex,
-                trailing: Expanded(
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 20),
-                      child: Column(
-                        spacing: 8,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _BrightnessButton(),
-                          PopupMenuButton<String>(
-                            icon: const Icon(Icons.image),
-                            onSelected: (choice) {
-                              // Handle selection based on value
-                              switch (choice) {
-                                case 'spring':
-                                  {
-                                    context
-                                        .read<SettingsCubit>()
-                                        .updateThemeWithImage(
-                                            'assets/bg_spring.webp');
-                                    break;
-                                  }
-
-                                case 'winter':
-                                  {
-                                    context
-                                        .read<SettingsCubit>()
-                                        .updateThemeWithImage(
-                                            'assets/bg_winter.webp');
-                                    break;
-                                  }
-                                case 'end':
-                                  {
-                                    context
-                                        .read<SettingsCubit>()
-                                        .updateThemeWithImage(
-                                            'assets/bg_end.webp');
-                                    break;
-                                  }
-                                case 'desert':
-                                  {
-                                    context
-                                        .read<SettingsCubit>()
-                                        .updateThemeWithImage(
-                                            'assets/bg_desert.webp');
-                                    break;
-                                  }
-                              }
-                            },
-                            itemBuilder: (context) {
-                              return [
-                                PopupMenuItem<String>(
-                                  value: 'spring',
-                                  child: ImageThemeMenuItem(
-                                      imgPath: 'assets/bg_spring.webp',
-                                      name: 'Spring'),
-                                ),
-                                PopupMenuItem<String>(
-                                  value: 'winter',
-                                  child: ImageThemeMenuItem(
-                                      imgPath: 'assets/bg_winter.webp',
-                                      name: 'Winter'),
-                                ),
-                                PopupMenuItem<String>(
-                                  value: 'end',
-                                  child: ImageThemeMenuItem(
-                                      imgPath: 'assets/bg_end.webp',
-                                      name: 'End'),
-                                ),
-                                PopupMenuItem<String>(
-                                  value: 'desert',
-                                  child: ImageThemeMenuItem(
-                                      imgPath: 'assets/bg_desert.webp',
-                                      name: 'Desert'),
-                                ),
-                              ];
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+                trailing: NavigationTrailing(),
               ),
               Expanded(child: widget.child),
             ],
           ),
         );
       },
+    );
+  }
+}
+
+class NavigationTrailing extends StatelessWidget {
+  NavigationTrailing({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Expanded(
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _BrightnessButton(),
+              _ThemeSelector(),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -238,63 +147,81 @@ class _BrightnessButton extends StatelessWidget {
   }
 }
 
-class _ColorImageButton extends StatelessWidget {
-  const _ColorImageButton({
-    required this.handleImageSelect,
-    required this.imageSelected,
-    required this.colorSelectionMethod,
-  });
-
-  final void Function(int) handleImageSelect;
-  final ColorImageProvider imageSelected;
-  final ColorSelectionMethod colorSelectionMethod;
+class _ThemeSelector extends StatelessWidget {
+  const _ThemeSelector({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return PopupMenuButton(
-      icon: const Icon(
-        Icons.image_outlined,
-      ),
-      tooltip: 'Select a color extraction image',
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      itemBuilder: (context) {
-        return List.generate(ColorImageProvider.values.length, (index) {
-          final currentImageProvider = ColorImageProvider.values[index];
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.image),
+      onSelected: (choice) => _handleThemeSelection(context, choice),
+      itemBuilder: _buildThemeItems,
+    );
+  }
 
-          return PopupMenuItem(
-            value: index,
-            enabled: currentImageProvider != imageSelected ||
-                colorSelectionMethod != ColorSelectionMethod.image,
-            child: Wrap(
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 10),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 48),
-                    child: Padding(
-                      padding: const EdgeInsets.all(4.0),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8.0),
-                        child: Image(
-                          image: AssetImage(currentImageProvider.path),
-                          fit: BoxFit.cover,
-                          height: 32,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 20),
-                  child: Text(currentImageProvider.label),
-                ),
-              ],
+  void _handleThemeSelection(BuildContext context, String choice) {
+    final themes = {
+      'spring': 'assets/bg_spring.webp',
+      'winter': 'assets/bg_winter.webp',
+      'end': 'assets/bg_end.webp',
+      'desert': 'assets/bg_desert.webp',
+    };
+
+    final theme = themes[choice];
+    if (theme != null) {
+      context.read<SettingsCubit>().updateThemeWithImage(theme);
+    }
+  }
+
+  List<PopupMenuEntry<String>> _buildThemeItems(BuildContext context) {
+    final themes = [
+      ('spring', 'Spring'),
+      ('winter', 'Winter'),
+      ('end', 'End'),
+      ('desert', 'Desert'),
+    ];
+
+    return themes
+        .map((theme) => PopupMenuItem<String>(
+              value: theme.$1,
+              child: ImageThemeMenuItem(
+                imgPath: 'assets/bg_${theme.$1}.webp',
+                name: theme.$2,
+              ),
+            ))
+        .toList();
+  }
+}
+
+class ImageThemeMenuItem extends StatelessWidget {
+  final String imgPath;
+  final String name;
+
+  const ImageThemeMenuItem({
+    super.key,
+    required this.imgPath,
+    required this.name,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(4.0),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8.0),
+            child: Image.asset(
+              imgPath,
+              width: 36,
+              height: 36,
+              fit: BoxFit.cover,
             ),
-          );
-        });
-      },
-      onSelected: handleImageSelect,
+          ),
+        ),
+        const SizedBox(width: 14),
+        Text(name),
+      ],
     );
   }
 }

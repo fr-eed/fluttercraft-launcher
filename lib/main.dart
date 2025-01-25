@@ -19,12 +19,14 @@ import 'screens/instance_screen.dart';
 import 'screens/play_screen.dart';
 import 'screens/skins_screen.dart';
 import 'screens/auth_screen.dart';
+import 'screens/settings_screen.dart';
 
 // Local imports
 import 'constants.dart';
 import 'cubits/settings_cubit.dart';
 import 'home.dart';
 import 'cubits/auth_cubit.dart';
+import 'ui/fade_transition_page.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -64,12 +66,12 @@ final GoRouter _router = GoRouter(
             return AuthScreen();
           },
         ),
-        // GoRoute(
-        //   path: '/java',
-        //   builder: (context, state) {
-        //     return JavaConfigScreen();
-        //   },
-        // ),
+        GoRoute(
+          path: '/settings',
+          builder: (context, state) {
+            return SettingsScreen();
+          },
+        ),
       ],
     ),
   ],
@@ -90,15 +92,6 @@ Future<void> initializeWindow() async {
   await windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.focus();
   });
-}
-
-Future<ColorScheme?> initializeColorScheme(
-    ColorSelectionMethod method, ColorImageProvider imageProvider) async {
-  if (method == ColorSelectionMethod.image) {
-    final String imagePath = imageProvider.path;
-    return await ColorScheme.fromImageProvider(provider: AssetImage(imagePath));
-  }
-  return null;
 }
 
 void main() async {
