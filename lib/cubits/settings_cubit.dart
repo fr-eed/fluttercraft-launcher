@@ -1,3 +1,4 @@
+import "package:fluttcraft_launcher/constants.dart";
 import "package:flutter/material.dart";
 import "package:hydrated_bloc/hydrated_bloc.dart";
 
@@ -120,7 +121,7 @@ class SettingsState {
     this.brightnessMode = BrightnessMode.system,
     this.fontSize = 14.0,
     this.notificationsEnabled = true,
-    this.selectedImagePath = 'assets/bg_spring.webp',
+    this.selectedImagePath = "assets/bg_sakura.webp",
     this.themeColorSchemeLight,
     this.themeColorSchemeDark,
   });

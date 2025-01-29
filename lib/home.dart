@@ -4,6 +4,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+import 'constants.dart';
 import 'cubits/settings_cubit.dart';
 
 class Home extends StatefulWidget {
@@ -152,41 +154,24 @@ class _ThemeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PopupMenuButton<String>(
+    return PopupMenuButton<ImageThene>(
       icon: const Icon(Icons.image),
       onSelected: (choice) => _handleThemeSelection(context, choice),
       itemBuilder: _buildThemeItems,
     );
   }
 
-  void _handleThemeSelection(BuildContext context, String choice) {
-    final themes = {
-      'spring': 'assets/bg_spring.webp',
-      'winter': 'assets/bg_winter.webp',
-      'end': 'assets/bg_end.webp',
-      'desert': 'assets/bg_desert.webp',
-    };
-
-    final theme = themes[choice];
-    if (theme != null) {
-      context.read<SettingsCubit>().updateThemeWithImage(theme);
-    }
+  void _handleThemeSelection(BuildContext context, ImageThene choice) {
+    context.read<SettingsCubit>().updateThemeWithImage(choice.path);
   }
 
-  List<PopupMenuEntry<String>> _buildThemeItems(BuildContext context) {
-    final themes = [
-      ('spring', 'Spring'),
-      ('winter', 'Winter'),
-      ('end', 'End'),
-      ('desert', 'Desert'),
-    ];
-
-    return themes
-        .map((theme) => PopupMenuItem<String>(
-              value: theme.$1,
+  List<PopupMenuEntry<ImageThene>> _buildThemeItems(BuildContext context) {
+    return ImageThene.values
+        .map((theme) => PopupMenuItem<ImageThene>(
+              value: theme,
               child: ImageThemeMenuItem(
-                imgPath: 'assets/bg_${theme.$1}.webp',
-                name: theme.$2,
+                imgPath: theme.path,
+                name: theme.label,
               ),
             ))
         .toList();

@@ -33,11 +33,13 @@ enum ColorSeed {
   final Color color;
 }
 
-enum ColorImageProvider {
+enum ImageThene {
   spring('Spring', "assets/bg_spring.webp"),
-  winter('Winter', "assets/bg_winter.webp");
+  winter('Winter', "assets/bg_winter.webp"),
+  sakura('Sakura', "assets/bg_sakura.webp"),
+  desert('Desert', "assets/bg_desert.webp");
 
-  const ColorImageProvider(this.label, this.path);
+  const ImageThene(this.label, this.path);
   final String label;
   final String path;
 }

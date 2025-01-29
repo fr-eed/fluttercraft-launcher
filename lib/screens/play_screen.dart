@@ -4,13 +4,10 @@ import 'package:fluttcraft_launcher/constants.dart';
 import 'package:fluttcraft_launcher/cubits/settings_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../auth/microsoft_auth.dart';
 import '../util/beaver.dart';
 
 class PlayScreen extends StatelessWidget {
-  final ColorImageProvider imageSelected;
-
-  PlayScreen({super.key, required this.imageSelected});
+  const PlayScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

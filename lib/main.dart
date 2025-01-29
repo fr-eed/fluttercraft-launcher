@@ -45,7 +45,7 @@ final GoRouter _router = GoRouter(
         GoRoute(
           path: '/home',
           builder: (context, state) {
-            return PlayScreen(imageSelected: ColorImageProvider.spring);
+            return PlayScreen();
           },
         ),
         GoRoute(
