@@ -1,0 +1,82 @@
+name: "Windows"
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - test
+      - main
+  push:
+    branches:
+      - dev
+      - test
+      - main
+
+jobs:  
+  build:      
+    name: Build & Release 
+    runs-on: windows-latest
+
+    steps:
+      # 1. Checkout Repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # 2. Setup Flutter
+      - name: Set Up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.1'
+          channel: 'stable'
+
+      # 3. Install Dependencies
+      - name: Install Dependencies
+        run: flutter pub get
+
+      # 4. Build Windows App
+      - name: Build App
+        run: flutter build windows --release
+
+      # 5. Create a ZIP Package
+      - name: Create ZIP Package
+        run: |
+          cd build/windows/x64/runner/Release
+          $zipFileName = "fluttercraft_launcher.zip"
+          Compress-Archive -Path * -DestinationPath $zipFileName
+
+      # 6. Extract Version from pubspec.yaml
+      - name: Extract version from pubspec.yaml
+        id: extract_version
+        shell: bash
+        run: |
+          version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r')
+          echo "VERSION=$version" >> $GITHUB_ENV
+
+      # 7. Check if Tag Exists
+      - name: Check if Tag Exists
+        id: check_tag
+        shell: bash
+        run: |
+          if git rev-parse "v${{ env.VERSION }}" >/dev/null 2>&1; then
+            echo "TAG_EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "TAG_EXISTS=false" >> $GITHUB_ENV
+          fi
+
+      # 8. Modify Tag if it Exists
+      - name: Modify Tag
+        if: env.TAG_EXISTS == 'true'
+        id: modify_tag
+        shell: bash
+        run: |
+          new_version="${{ env.VERSION }}-build-${{ github.run_number }}"
+          echo "VERSION=$new_version" >> $GITHUB_ENV
+
+      # 9. Upload Release
+      - name: Upload Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/windows/x64/runner/Release/fluttercraft_launcher.zip
+          tag_name: v${{ env.VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}

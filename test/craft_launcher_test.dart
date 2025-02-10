@@ -1,5 +1,5 @@
-import 'package:fluttcraft_launcher/craft/craft_exports.dart';
-import 'package:fluttcraft_launcher/util/beaver.dart';
+import 'package:fluttercraft_launcher/craft/craft_exports.dart';
+import 'package:fluttercraft_launcher/util/beaver.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
@@ -15,7 +15,7 @@ bool testJsonSerialization<T>(
 
 Future<void> main() async {
   String tmpDir = p.join(Directory.current.path, ".temp");
-  String installDir = p.join(tmpDir, "fluttcraft");
+  String installDir = p.join(tmpDir, "FlutterCraft");
 
   setUpAll(() async {
     // create dir

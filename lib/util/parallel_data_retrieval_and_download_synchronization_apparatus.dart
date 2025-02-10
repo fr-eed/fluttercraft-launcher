@@ -3,7 +3,7 @@ import 'dart:collection';
 import 'dart:io';
 import 'package:crypto/crypto.dart';
 
-import 'package:fluttcraft_launcher/util/beaver.dart';
+import 'package:fluttercraft_launcher/util/beaver.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
