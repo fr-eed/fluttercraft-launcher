@@ -1,32 +1,27 @@
 // Flutter framework
+import 'package:fluttcraft_launcher/cubits/instances_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 // Navigation
 import 'package:go_router/go_router.dart';
-
 // State management & persistence
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:path_provider/path_provider.dart';
-
+import 'package:protocol_handler/protocol_handler.dart';
 // Window management
 import 'package:window_manager/window_manager.dart';
 
-import 'package:protocol_handler/protocol_handler.dart';
-
+// Local imports
+import 'constants.dart';
+import 'cubits/auth_cubit.dart';
+import 'cubits/settings_cubit.dart';
+import 'home.dart';
+import 'screens/auth_screen.dart';
 // Screen imports
 import 'screens/instance_screen.dart';
 import 'screens/play_screen.dart';
-import 'screens/skins_screen.dart';
-import 'screens/auth_screen.dart';
 import 'screens/settings_screen.dart';
-
-// Local imports
-import 'constants.dart';
-import 'cubits/settings_cubit.dart';
-import 'home.dart';
-import 'cubits/auth_cubit.dart';
-import 'ui/fade_transition_page.dart';
+import 'screens/skins_screen.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -123,7 +118,9 @@ class Main extends StatelessWidget {
         ),
         BlocProvider<AuthCubit>(
           create: (context) => AuthCubit(),
-        )
+        ),
+        BlocProvider<CraftInstanceCubit>(
+            create: (context) => CraftInstanceCubit()),
       ],
       child: App(),
     );
