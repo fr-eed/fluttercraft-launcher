@@ -53,7 +53,7 @@ jobs:
           Terminal=false
           Name=FlutterCraft Launcher
           Exec=fluttercraft_launcher %u
-          Icon=icon.png
+          Icon=icon
           Categories=Utility;
           EOF
 
