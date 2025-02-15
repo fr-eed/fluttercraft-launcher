@@ -89,6 +89,7 @@ jobs:
 
       # 9. Upload Release
       - name: Upload Release
+        if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           files: build/macos/dmg/FlutterCraft.dmg

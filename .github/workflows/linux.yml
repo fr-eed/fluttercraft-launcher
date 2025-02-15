@@ -29,57 +29,50 @@ jobs:
           flutter-version: '3.27.1'
           channel: 'stable'
 
-      # 3. Install Dependencies
-      - name: Install Dependencies
-        run: flutter pub get
-
       # 4. Install System Dependencies
       - name: Install Linux Dependencies
         run: |
-          sudo apt update
-          sudo apt install -y ninja-build g++ cmake webkit2gtk libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev build-essential pkg-config libgtk-3-0 || true
+          sudo apt update -y
+          sudo apt-get install -y ninja-build libgtk-3-dev libfuse2
 
-      # 5. Set PKG_CONFIG_PATH for GTK
-      - name: Set PKG_CONFIG_PATH for GTK
-        run: |
-          # Search for gtk+-3.0.pc location
-          GTK_PC_PATH=$(sudo find / -name "gtk+-3.0.pc" | head -n 1)
-          if [ -z "$GTK_PC_PATH" ]; then
-            echo "GTK .pc file not found. Please verify GTK installation."
-            exit 1
-          fi
-          # Extract the directory from the path
-          GTK_PC_DIR=$(dirname "$GTK_PC_PATH")
-          export PKG_CONFIG_PATH=$GTK_PC_DIR:/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/pkgconfig:/usr/local/lib/pkgconfig
-          echo "PKG_CONFIG_PATH set to $PKG_CONFIG_PATH"
-          
-      # 6. Verify GTK installation
-      - name: Verify GTK installation
-        run: |
-          pkg-config --modversion gtk+-3.0
-          
-      # 7. Set up CMake Build Environment
-      - name: Set up CMake Build Environment
-        run: |
-          sudo apt install -y cmake ninja-build
-          export CMAKE_MAKE_PROGRAM=/usr/bin/ninja
-          export CXX=/usr/bin/g++
+      # 5. Install Dependencies
+      - name: Install Dependencies
+        run: flutter pub get
 
-      # 8. Build Linux App
+      # 6. Build Linux App
       - name: Build App
         run: flutter build linux --release
+      
+      # 7. Create Desktop File
+      - name: Create Desktop File
+        run: |
+          cat > build/linux/x64/release/bundle/fluttercraft_launcher.desktop <<EOF
+          [Desktop Entry]
+          Version=1.0
+          Type=Application
+          Terminal=false
+          Name=FlutterCraft Launcher
+          Exec=fluttercraft_launcher %u
+          Icon=icon
+          Categories=Utility;
+          EOF
 
-      # 9. Package App as AppImage
+      - name: Copy Icon
+        run: cp assets/icon.png build/linux/x64/release/bundle/
+
+      # 8. Package App as AppImage
       - name: Package App as AppImage
         run: |
           cd build/linux/x64/release/bundle
           mkdir AppDir
-          mv * AppDir/
+          shopt -s extglob
+          mv !(AppDir) AppDir/
           wget -q https://github.com/AppImage/AppImageKit/releases/latest/download/appimagetool-x86_64.AppImage
           chmod +x appimagetool-x86_64.AppImage
           ./appimagetool-x86_64.AppImage AppDir fluttercraft_launcher.AppImage
 
-      # 10. Extract Version from pubspec.yaml
+
+      # 9. Extract Version from pubspec.yaml
       - name: Extract version from pubspec.yaml
         id: extract_version
         shell: bash
@@ -87,7 +80,7 @@ jobs:
           version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r')
           echo "VERSION=$version" >> $GITHUB_ENV
 
-      # 11. Check if Tag Exists
+      # 10. Check if Tag Exists
       - name: Check if Tag Exists
         id: check_tag
         shell: bash
@@ -114,8 +107,9 @@ jobs:
 
           echo "VERSION=$base_version+$build" >> $GITHUB_ENV
 
-      # 12. Upload Release
+      # 11. Upload Release
       - name: Upload Release
+        if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           files: build/linux/x64/release/bundle/fluttercraft_launcher.AppImage
