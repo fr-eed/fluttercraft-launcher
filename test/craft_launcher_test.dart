@@ -15,7 +15,7 @@ bool testJsonSerialization<T>(
 
 Future<void> main() async {
   String tmpDir = p.join(Directory.current.path, ".temp");
-  String installDir = p.join(tmpDir, "fluttcraft");
+  String installDir = p.join(tmpDir, "FlutterCraft");
 
   setUpAll(() async {
     // create dir
