@@ -1,0 +1,91 @@
+name: "Linux"
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - test
+      - main
+  push:
+    branches:
+      - dev
+      - test
+      - main
+
+jobs:
+  build:
+    name: Build & Release
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout Repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # 2. Setup Flutter
+      - name: Set Up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.1'
+          channel: 'stable'
+
+      # 3. Install Dependencies
+      - name: Install Dependencies
+        run: flutter pub get
+
+      # 4. Install AppImage Dependencies
+      - name: Install Linux Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y libwebkit2gtk-4.0-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
+
+      # 5. Build Linux App
+      - name: Build App
+        run: flutter build linux --release
+
+      # 6. Package App as AppImage
+      - name: Package App as AppImage
+        run: |
+          cd build/linux/x64/release/bundle
+          mkdir AppDir
+          mv * AppDir/
+          wget -q https://github.com/AppImage/AppImageKit/releases/latest/download/appimagetool-x86_64.AppImage
+          chmod +x appimagetool-x86_64.AppImage
+          ./appimagetool-x86_64.AppImage AppDir fluttercraft_launcher.AppImage
+
+      # 7. Extract Version from pubspec.yaml
+      - name: Extract version from pubspec.yaml
+        id: extract_version
+        shell: bash
+        run: |
+          version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r')
+          echo "VERSION=$version" >> $GITHUB_ENV
+
+      # 8. Check if Tag Exists
+      - name: Check if Tag Exists
+        id: check_tag
+        shell: bash
+        run: |
+          if git rev-parse "v${{ env.VERSION }}" >/dev/null 2>&1; then
+            echo "TAG_EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "TAG_EXISTS=false" >> $GITHUB_ENV
+          fi
+
+      # 9. Modify Tag if it Exists
+      - name: Modify Tag
+        if: env.TAG_EXISTS == 'true'
+        id: modify_tag
+        shell: bash
+        run: |
+          new_version="${{ env.VERSION }}-build-${{ github.run_number }}"
+          echo "VERSION=$new_version" >> $GITHUB_ENV
+
+      # 10. Upload Release
+      - name: Upload Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/linux/x64/release/bundle/fluttercraft_launcher.AppImage
+          tag_name: v${{ env.VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
