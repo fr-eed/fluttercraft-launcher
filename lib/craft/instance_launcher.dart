@@ -95,7 +95,7 @@ class CraftInstanceLauncher {
       "classpath": classpath,
       "natives_directory":
           p.join(installDir, "natives", manifesto.majorVersion),
-      "launcher_name": "FlutterCraft Launcher",
+      "launcher_name": "FlutterCraft",
       "launcher_version": "1.0.0",
 
       "assets_root": p.join(installDir, "assets"),
