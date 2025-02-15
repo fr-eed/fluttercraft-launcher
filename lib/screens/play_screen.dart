@@ -77,9 +77,9 @@ class GameImage extends StatelessWidget {
               // Handle launch
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Please login to Microsoft account first'),
+                  content: Text('Please login to Microsoft Account first'),
                   backgroundColor: Theme.of(context).colorScheme.error,
-                  behavior: SnackBarBehavior.floating,
+                  behavior: SnackBarBehavior.fixed,
                 ),
               );
             },
