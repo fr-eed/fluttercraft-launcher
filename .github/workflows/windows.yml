@@ -42,7 +42,12 @@ jobs:
 
       # 5. Build Windows App
       - name: Build App
-        run: flutter build windows --release --bundling
+        run: flutter build windows --release
+
+      # 6. Create MSIX Package
+      - name: Create MSIX Package
+        run: flutter pub run msix:create
+
 
       # 6. Extract Version from pubspec.yaml
       - name: Extract version from pubspec.yaml
@@ -76,7 +81,7 @@ jobs:
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
-          files: build/windows/x64/runner/Release/fluttercraft_launcher.exe
+          files: build/windows/x64/runner/Release/fluttercraft_launcher.msix
           tag_name: v${{ env.VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
