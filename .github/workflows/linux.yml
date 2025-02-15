@@ -37,7 +37,13 @@ jobs:
       - name: Install Linux Dependencies
         run: |
           sudo apt update
-          sudo apt install -y ninja-build g++ cmake webkit2gtk libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev || true
+          sudo apt install -y ninja-build g++ cmake webkit2gtk libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev build-essential || true
+
+      - name: Set up CMake Build Environment
+        run: |
+          sudo apt install -y cmake ninja-build
+          export CMAKE_MAKE_PROGRAM=/usr/bin/ninja
+          export CXX=/usr/bin/g++
 
       # 5. Build Linux App
       - name: Build App

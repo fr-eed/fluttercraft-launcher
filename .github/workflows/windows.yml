@@ -22,32 +22,27 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # 2. Setup Java
-      #- name: Set Up Java
-      #  uses: actions/setup-java@v3
-      #  with:
-      #    distribution: 'oracle'
-      #    java-version: '17'
-
-      # 3. Setup Flutter
+      # 2. Setup Flutter
       - name: Set Up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.27.1'
           channel: 'stable'
 
-      # 4. Install Dependencies
+      # 3. Install Dependencies
       - name: Install Dependencies
         run: flutter pub get
 
-      # 5. Build Windows App
+      # 4. Build Windows App
       - name: Build App
         run: flutter build windows --release
 
-      # 6. Create MSIX Package
-      - name: Create MSIX Package
-        run: flutter pub run msix:create
-
+      # 5. Create a ZIP Package
+      - name: Create ZIP Package
+        run: |
+          cd build/windows/x64/runner/Release
+          $zipFileName = "fluttercraft_launcher.zip"
+          Compress-Archive -Path * -DestinationPath $zipFileName
 
       # 6. Extract Version from pubspec.yaml
       - name: Extract version from pubspec.yaml
@@ -81,7 +76,7 @@ jobs:
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
-          files: build/windows/x64/runner/Release/fluttercraft_launcher.msix
+          files: build/windows/x64/runner/Release/fluttercraft_launcher.zip
           tag_name: v${{ env.VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
