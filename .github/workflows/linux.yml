@@ -15,7 +15,7 @@ on:
 jobs:
   build:
     name: Build & Release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       # 1. Checkout Repository
@@ -37,7 +37,7 @@ jobs:
       - name: Install Linux Dependencies
         run: |
           sudo apt update
-          sudo apt install -y libwebkit2gtk-4.0-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
+          sudo apt install -y webkit2gtk libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev || true
 
       # 5. Build Linux App
       - name: Build App
