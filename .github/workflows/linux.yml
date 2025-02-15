@@ -33,7 +33,7 @@ jobs:
       - name: Install Linux Dependencies
         run: |
           sudo apt update -y
-          sudo apt-get install -y ninja-build libgtk-3-dev libfuse2
+          sudo apt-get install -y ninja-build libgtk-3-dev libfuse2 appstreamcli
 
       # 5. Install Dependencies
       - name: Install Dependencies
@@ -42,8 +42,22 @@ jobs:
       # 6. Build Linux App
       - name: Build App
         run: flutter build linux --release
+      
+      # 7. Create Desktop File
+      - name: Create Desktop File
+        run: |
+          cat > build/linux/x64/release/bundle/fluttercraft_launcher.desktop <<EOF
+          [Desktop Entry]
+          Version=1.0
+          Type=Application
+          Terminal=false
+          Name=FlutterCraft Launcher
+          Exec=fluttercraft_launcher %u
+          Icon=fluttercraft_launcher
+          Categories=Utility;
+          EOF
 
-      # 7. Package App as AppImage
+      # 8. Package App as AppImage
       - name: Package App as AppImage
         run: |
           cd build/linux/x64/release/bundle
@@ -55,7 +69,7 @@ jobs:
           ./appimagetool-x86_64.AppImage AppDir fluttercraft_launcher.AppImage
 
 
-      # 8. Extract Version from pubspec.yaml
+      # 9. Extract Version from pubspec.yaml
       - name: Extract version from pubspec.yaml
         id: extract_version
         shell: bash
@@ -63,7 +77,7 @@ jobs:
           version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r')
           echo "VERSION=$version" >> $GITHUB_ENV
 
-      # 9. Check if Tag Exists
+      # 10. Check if Tag Exists
       - name: Check if Tag Exists
         id: check_tag
         shell: bash
@@ -90,7 +104,7 @@ jobs:
 
           echo "VERSION=$base_version+$build" >> $GITHUB_ENV
 
-      # 10. Upload Release
+      # 11. Upload Release
       - name: Upload Release
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
