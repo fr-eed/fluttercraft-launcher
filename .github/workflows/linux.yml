@@ -48,10 +48,12 @@ jobs:
         run: |
           cd build/linux/x64/release/bundle
           mkdir AppDir
-          mv * AppDir/
+          shopt -s extglob
+          mv !(AppDir) AppDir/
           wget -q https://github.com/AppImage/AppImageKit/releases/latest/download/appimagetool-x86_64.AppImage
           chmod +x appimagetool-x86_64.AppImage
           ./appimagetool-x86_64.AppImage AppDir fluttercraft_launcher.AppImage
+
 
       # 8. Extract Version from pubspec.yaml
       - name: Extract version from pubspec.yaml
@@ -90,6 +92,7 @@ jobs:
 
       # 10. Upload Release
       - name: Upload Release
+        if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           files: build/linux/x64/release/bundle/fluttercraft_launcher.AppImage
