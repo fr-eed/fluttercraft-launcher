@@ -41,7 +41,7 @@ jobs:
         run: flutter pub get
 
        #6 Building APP
-      - name: Build DMG
+      - name: Build App
         run: flutter build macos --release
 
         #9 Upload Artifacts
@@ -50,7 +50,7 @@ jobs:
         with:
           name: Releases
           path: |
-            build/macos/Build/Products/Release/${APP_NAME}.app
+            build/macos/Build/Products/Release/FlutterCraft.app
 
         #10 Extract Version
       - name: Extract version from pubspec.yaml
@@ -91,4 +91,4 @@ jobs:
           files: build/macos/dmg/FlutterCraft-${{ github.ref_name }}.dmg
           tag_name: ${{ github.ref_name }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
