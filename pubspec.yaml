@@ -1,4 +1,4 @@
-name: fluttcraft_launcher
+name: fluttercraft_launcher
 description: A flutter implementation of Minecraft Launcher.
 
 publish_to: "none"

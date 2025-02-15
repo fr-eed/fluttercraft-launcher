@@ -1,4 +1,4 @@
-name: "Build"
+name: "MacOS"
 
 on:
   pull_request:
@@ -80,7 +80,7 @@ jobs:
       - name: Package into DMG
         run: |
           APP_NAME="FlutterCraft"
-          DMG_NAME="${APP_NAME}-${{ github.VERSION }}.dmg"
+          DMG_NAME="${APP_NAME}-${{ env.VERSION }}.dmg"
           mkdir -p build/macos/dmg
           hdiutil create -volname "${APP_NAME}" -srcfolder "build/macos/Build/Products/Release/${APP_NAME}.app" -ov -format UDZO "build/macos/dmg/${DMG_NAME}"
 

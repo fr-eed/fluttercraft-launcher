@@ -1,4 +1,4 @@
-import "package:fluttcraft_launcher/constants.dart";
+import "package:fluttercraft_launcher/constants.dart";
 import "package:flutter/material.dart";
 import "package:hydrated_bloc/hydrated_bloc.dart";
 

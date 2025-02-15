@@ -1,7 +1,7 @@
 import 'dart:ui';
 
-import 'package:fluttcraft_launcher/cubits/instances_cubit.dart';
-import 'package:fluttcraft_launcher/cubits/settings_cubit.dart';
+import 'package:fluttercraft_launcher/cubits/instances_cubit.dart';
+import 'package:fluttercraft_launcher/cubits/settings_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../util/beaver.dart';
