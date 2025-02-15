@@ -42,7 +42,7 @@ jobs:
 
       # 5. Build Windows App
       - name: Build App
-        run: flutter build windows --release
+        run: flutter build windows --release --bundling
 
       # 6. Extract Version from pubspec.yaml
       - name: Extract version from pubspec.yaml
