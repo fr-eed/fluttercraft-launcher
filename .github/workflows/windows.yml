@@ -76,7 +76,7 @@ jobs:
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
-          files: build\windows\x64\runner\Release\fluttercraft_launcher.exe
+          files: build/windows/x64/runner/Release/fluttercraft_launcher.exe
           tag_name: v${{ env.VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
