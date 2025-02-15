@@ -1,4 +1,6 @@
 // Flutter framework
+import 'dart:io';
+
 import 'package:fluttercraft_launcher/cubits/instances_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -73,14 +75,15 @@ final GoRouter _router = GoRouter(
 );
 
 Future<void> initializeWindow() async {
-  WindowOptions windowOptions = const WindowOptions(
+  WindowOptions windowOptions = WindowOptions(
     size: minWindowSize,
     minimumSize: minWindowSize,
     fullScreen: false,
     center: true,
     backgroundColor: Colors.transparent,
     skipTaskbar: false,
-    titleBarStyle: TitleBarStyle.hidden,
+    titleBarStyle:
+        Platform.isMacOS ? TitleBarStyle.hidden : TitleBarStyle.normal,
   );
 
   await windowManager.ensureInitialized();

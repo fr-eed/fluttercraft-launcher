@@ -37,29 +37,31 @@ jobs:
       - name: Install Linux Dependencies
         run: |
           sudo apt update
-          sudo apt install -y ninja-build g++ cmake webkit2gtk libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev build-essential pkg-config || true
-    
+          sudo apt install -y ninja-build g++ cmake webkit2gtk libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev build-essential pkg-config libgtk-3-0 || true
+
+      # 5. Set PKG_CONFIG_PATH for GTK
       - name: Set PKG_CONFIG_PATH
         run: |
-          export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/local/lib/pkgconfig
+          export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/pkgconfig:/usr/local/lib/pkgconfig
           echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH"
           
+      # 6. Verify GTK installation
+      - name: Verify GTK installation
+        run: |
+          pkg-config --modversion gtk+-3.0
 
+      # 7. Set up CMake Build Environment
       - name: Set up CMake Build Environment
         run: |
           sudo apt install -y cmake ninja-build
           export CMAKE_MAKE_PROGRAM=/usr/bin/ninja
           export CXX=/usr/bin/g++
-          
-      - name: Verify GTK installation
-        run: |
-          pkg-config --modversion gtk+-3.0
-          
-      # 5. Build Linux App
+
+      # 8. Build Linux App
       - name: Build App
         run: flutter build linux --release
 
-      # 6. Package App as AppImage
+      # 9. Package App as AppImage
       - name: Package App as AppImage
         run: |
           cd build/linux/x64/release/bundle
@@ -69,7 +71,7 @@ jobs:
           chmod +x appimagetool-x86_64.AppImage
           ./appimagetool-x86_64.AppImage AppDir fluttercraft_launcher.AppImage
 
-      # 7. Extract Version from pubspec.yaml
+      # 10. Extract Version from pubspec.yaml
       - name: Extract version from pubspec.yaml
         id: extract_version
         shell: bash
@@ -77,7 +79,7 @@ jobs:
           version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r')
           echo "VERSION=$version" >> $GITHUB_ENV
 
-      # 8. Check if Tag Exists
+      # 11. Check if Tag Exists
       - name: Check if Tag Exists
         id: check_tag
         shell: bash
@@ -88,7 +90,7 @@ jobs:
             echo "TAG_EXISTS=false" >> $GITHUB_ENV
           fi
 
-      # 9. Modify Tag if it Exists
+      # 12. Modify Tag if it Exists
       - name: Modify Tag
         if: env.TAG_EXISTS == 'true'
         id: modify_tag
@@ -97,7 +99,7 @@ jobs:
           new_version="${{ env.VERSION }}-build-${{ github.run_number }}"
           echo "VERSION=$new_version" >> $GITHUB_ENV
 
-      # 10. Upload Release
+      # 13. Upload Release
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
