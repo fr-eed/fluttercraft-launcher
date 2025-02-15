@@ -22,29 +22,22 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-        #2 Setup Java
-      #- name: Set Up Java
-      #  uses: actions/setup-java@v3.12.0
-      #  with:
-      #    distribution: 'oracle'
-      #    java-version: '17'
-
-        #3 Setup Flutter
+        #2 Setup Flutter
       - name: Set Up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.27.1'
           channel: 'stable'
 
-        #4 Install Dependencies
+        #3 Install Dependencies
       - name: Install Dependencies
         run: flutter pub get
 
-       #6 Building APP
+       #4 Building APP
       - name: Build App
         run: flutter build macos --release
 
-        #9 Upload Artifacts
+        #5 Upload Artifacts
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -52,31 +45,41 @@ jobs:
           path: |
             build/macos/Build/Products/Release/FlutterCraft.app
 
-        #10 Extract Version
+        #6 Extract Version
       - name: Extract version from pubspec.yaml
         id: extract_version
         run: |
           version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r')
           echo "VERSION=$version" >> $GITHUB_ENV
 
-        #11 Check if Tag Exists
+
+      # 7. Check if Tag Exists
       - name: Check if Tag Exists
         id: check_tag
+        shell: bash
         run: |
-          if git rev-parse "v${{ env.VERSION }}" >/dev/null 2>&1; then
+          version="${{ env.VERSION }}"
+          build=0
+
+          # Extract base version (removes +build part if exists)
+          base_version=$(echo "$version" | cut -d'+' -f1)
+
+          # Check if base version exists as a tag
+          if git rev-parse "v$base_version" >/dev/null 2>&1; then
             echo "TAG_EXISTS=true" >> $GITHUB_ENV
           else
             echo "TAG_EXISTS=false" >> $GITHUB_ENV
+            echo "VERSION=$base_version" >> $GITHUB_ENV
+            exit 0
           fi
 
-        #12 Modify Tag if it Exists
-      - name: Modify Tag
-        if: env.TAG_EXISTS == 'true'
-        id: modify_tag
-        run: |
-          new_version="${{ env.VERSION }}-build-${{ github.run_number }}"
-          echo "VERSION=$new_version" >> $GITHUB_ENV
-        
+          # If tag exists, increment build number until a free version is found
+          while git rev-parse "v$base_version+$build" >/dev/null 2>&1; do
+            ((build++))
+          done
+
+          echo "VERSION=$base_version+$build" >> $GITHUB_ENV
+      # 8. Package into DMG
       - name: Package into DMG
         run: |
           APP_NAME="FlutterCraft"
@@ -84,7 +87,7 @@ jobs:
           mkdir -p build/macos/dmg
           hdiutil create -volname "${APP_NAME}" -srcfolder "build/macos/Build/Products/Release/${APP_NAME}.app" -ov -format UDZO "build/macos/dmg/${DMG_NAME}"
 
-
+      # 9. Upload Release
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:

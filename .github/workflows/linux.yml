@@ -92,22 +92,29 @@ jobs:
         id: check_tag
         shell: bash
         run: |
-          if git rev-parse "v${{ env.VERSION }}" >/dev/null 2>&1; then
+          version="${{ env.VERSION }}"
+          build=0
+
+          # Extract base version (removes +build part if exists)
+          base_version=$(echo "$version" | cut -d'+' -f1)
+
+          # Check if base version exists as a tag
+          if git rev-parse "v$base_version" >/dev/null 2>&1; then
             echo "TAG_EXISTS=true" >> $GITHUB_ENV
           else
             echo "TAG_EXISTS=false" >> $GITHUB_ENV
+            echo "VERSION=$base_version" >> $GITHUB_ENV
+            exit 0
           fi
 
-      # 12. Modify Tag if it Exists
-      - name: Modify Tag
-        if: env.TAG_EXISTS == 'true'
-        id: modify_tag
-        shell: bash
-        run: |
-          new_version="${{ env.VERSION }}-build-${{ github.run_number }}"
-          echo "VERSION=$new_version" >> $GITHUB_ENV
+          # If tag exists, increment build number until a free version is found
+          while git rev-parse "v$base_version+$build" >/dev/null 2>&1; do
+            ((build++))
+          done
 
-      # 13. Upload Release
+          echo "VERSION=$base_version+$build" >> $GITHUB_ENV
+
+      # 12. Upload Release
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
