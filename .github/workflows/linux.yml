@@ -44,6 +44,7 @@ jobs:
         run: flutter build linux --release
       
       # 7. Create Desktop File
+      #Icon=fluttercraft_launcher
       - name: Create Desktop File
         run: |
           cat > build/linux/x64/release/bundle/fluttercraft_launcher.desktop <<EOF
@@ -53,7 +54,6 @@ jobs:
           Terminal=false
           Name=FlutterCraft Launcher
           Exec=fluttercraft_launcher %u
-          Icon=fluttercraft_launcher
           Categories=Utility;
           EOF
 
