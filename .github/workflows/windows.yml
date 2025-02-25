@@ -21,7 +21,7 @@ jobs:
     runs-on: windows-latest
 
     needs: version_manager 
-    
+
     if: contains(needs.version_manager.outputs.should_build, 'true')
 
 
@@ -31,6 +31,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Extract Version
+        shell: bash
         run: |
           echo "VERSION=${{ needs.version_manager.outputs.version }}" >> $GITHUB_ENV
 
