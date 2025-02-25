@@ -80,32 +80,39 @@ jobs:
           version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r')
           echo "VERSION=$version" >> $GITHUB_ENV
 
-      # 10. Check if Tag Exists
-      - name: Check if Tag Exists
-        id: check_tag
+      # 10. Auto-Increment Version
+      - name: Auto-Increment Version
         shell: bash
         run: |
+          echo "🔥 Fetching all tags..."
+          git fetch --tags
+
           version="${{ env.VERSION }}"
           build=0
 
+          echo "📢 Initial VERSION: $version"
+
           # Extract base version (removes +build part if exists)
           base_version=$(echo "$version" | cut -d'+' -f1)
+          echo "🧐 Base Version Extracted: $base_version"
 
-          # Check if base version exists as a tag
-          if git rev-parse "v$base_version" >/dev/null 2>&1; then
-            echo "TAG_EXISTS=true" >> $GITHUB_ENV
+          # Check if base version exists
+          if git tag -l "v$base_version" | grep -q .; then
+            echo "✅ Base version exists. Finding next build number..."
+            
+            # Increment build number until an unused one is found
+            while git tag -l "v$base_version+build$build" | grep -q .; do
+              ((build++))
+            done
           else
-            echo "TAG_EXISTS=false" >> $GITHUB_ENV
-            echo "VERSION=$base_version" >> $GITHUB_ENV
-            exit 0
+            echo "❌ Base version does not exist. Using base version as final."
           fi
 
-          # If tag exists, increment build number until a free version is found
-          while git rev-parse "v$base_version+$build" >/dev/null 2>&1; do
-            ((build++))
-          done
+          final_version="$base_version+build$build"
+          echo "🎯 Final Computed Version: $final_version"
 
-          echo "VERSION=$base_version+$build" >> $GITHUB_ENV
+          echo "VERSION=$final_version" >> $GITHUB_ENV
+
 
       # 11. Upload Release
       - name: Upload Release
