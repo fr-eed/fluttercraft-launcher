@@ -2,12 +2,21 @@ name: Version Manager
 
 on:
   workflow_call:
+    # Map the workflow outputs to job outputs
+    outputs:
+      should_build:
+        description: "true if the app should be built"
+        value: ${{ jobs.version_manager.outputs.should_build }}
+      version:
+        description: "Version of the app to build"
+        value: ${{ jobs.version_manager.outputs.version }}
+
 
 jobs:
   version_manager:
     runs-on: ubuntu-latest
     outputs:
-      build: ${{ steps.step2.outputs.build }}
+      should_build: ${{ steps.step2.outputs.should_build }}
       version: ${{ steps.step2.outputs.version }}
     steps:
       - name: Checkout repository
@@ -31,8 +40,8 @@ jobs:
           # Check if the version exists as a tag
           if git tag -l "v$version" | grep -q "v$version"; then
             echo "❌ Version v$version exists. Skipping build."
-            echo "build=false" >> $GITHUB_OUTPUT
+            echo "should_build=false" >> $GITHUB_OUTPUT
           else
             echo "✅ Version v$version does not exist. Proceeding with build."
-            echo "build=true" >> $GITHUB_OUTPUT
+            echo "should_build=true" >> $GITHUB_OUTPUT
           fi

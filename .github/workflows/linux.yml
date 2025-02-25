@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     needs: version_manager 
-    if: ${{ needs.version_manager.outputs.build == 'true' }}
+    if: contains(needs.version_manager.outputs.should_build, 'true')
 
 
     steps:
