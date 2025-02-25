@@ -1,0 +1,38 @@
+name: Version Manager
+
+on:
+  workflow_call:
+
+jobs:
+  version_manager:
+    runs-on: ubuntu-latest
+    outputs:
+      build: ${{ steps.step2.outputs.build }}
+      version: ${{ steps.step2.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Extract version from pubspec.yaml
+        id: extract_version
+        run: |
+          version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r')
+          echo "VERSION=$version" >> $GITHUB_ENV
+
+      - name: Determine Version and Check Tag Existence
+        id: step2
+        run: |
+          version="${{ env.VERSION }}"
+          echo "📢 Initial VERSION: $version"
+
+          # Setting the version output
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+          # Check if the version exists as a tag
+          if git tag -l "v$version" | grep -q "v$version"; then
+            echo "❌ Version v$version exists. Skipping build."
+            echo "build=false" >> $GITHUB_OUTPUT
+          else
+            echo "✅ Version v$version does not exist. Proceeding with build."
+            echo "build=true" >> $GITHUB_OUTPUT
+          fi

@@ -13,14 +13,24 @@ on:
       - main
 
 jobs:  
+  version_manager:
+    uses: ./.github/workflows/version_manager.yml 
+
   build:      
     name: Build & Release 
     runs-on: windows-latest
+
+    needs: version_manager 
+    if: ${{ needs.version_manager.outputs.build == 'true' }}
 
     steps:
       # 1. Checkout Repository
       - name: Checkout Repository
         uses: actions/checkout@v3
+
+      - name: Extract Version
+        run: |
+          echo "VERSION=${{ needs.version_manager.outputs.version }}" >> $GITHUB_ENV
 
       # 2. Setup Flutter
       - name: Set Up Flutter
@@ -44,50 +54,7 @@ jobs:
           $zipFileName = "fluttercraft_launcher.zip"
           Compress-Archive -Path * -DestinationPath $zipFileName
 
-      # 6. Extract Version from pubspec.yaml
-      - name: Extract version from pubspec.yaml
-        id: extract_version
-        shell: bash
-        run: |
-          version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r')
-          echo "VERSION=$version" >> $GITHUB_ENV
-
-      # 7. Auto-Increment Version
-      - name: Auto-Increment Version
-        shell: bash
-        run: |
-          echo "🔥 Fetching all tags..."
-          git fetch --tags
-
-          version="${{ env.VERSION }}"
-          build=0
-
-          echo "📢 Initial VERSION: $version"
-
-          # Extract base version (removes +build part if exists)
-          base_version=$(echo "$version" | cut -d'+' -f1)
-          echo "🧐 Base Version Extracted: $base_version"
-
-          # Check if base version exists
-          if git tag -l "v$base_version" | grep -q .; then
-            echo "✅ Base version exists. Finding next build number..."
-            
-            # Increment build number until an unused one is found
-            while git tag -l "v$base_version+build$build" | grep -q .; do
-              ((build++))
-            done
-          else
-            echo "❌ Base version does not exist. Using base version as final."
-          fi
-
-          final_version="$base_version+build$build"
-          echo "🎯 Final Computed Version: $final_version"
-
-          echo "VERSION=$final_version" >> $GITHUB_ENV
-
-
-
-      # 8. Upload Release
+      # 6. Upload Release
       - name: Upload Release
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
@@ -96,3 +63,4 @@ jobs:
           tag_name: v${{ env.VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+

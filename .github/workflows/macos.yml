@@ -13,14 +13,29 @@ on:
       - main
 
 jobs:  
+  version_manager:
+    uses: ./.github/workflows/version_manager.yml 
+
   build:      
     name: Build & Release 
-    runs-on: macos-latest 
+    runs-on: macos-latest
+
+    needs: version_manager 
+    
+    if: contains(needs.version_manager.outputs.build, 'true')
 
     steps:
         #1 Checkout Repository
       - name: Checkout Repository
         uses: actions/checkout@v3
+
+
+
+      - name: Extract Version
+        run: |
+          echo "${{needs.version_manager.outputs.build}}"
+          echo "${{needs.version_manager.outputs.version}}"
+          echo "VERSION=${{ needs.version_manager.outputs.version }}" >> $GITHUB_ENV
 
         #2 Setup Flutter
       - name: Set Up Flutter
@@ -33,7 +48,7 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
-       #4 Building APP
+       #4 Build App
       - name: Build App
         run: flutter build macos --release
 
@@ -45,50 +60,9 @@ jobs:
           path: |
             build/macos/Build/Products/Release/FlutterCraft.app
 
-        #6 Extract Version
-      - name: Extract version from pubspec.yaml
-        id: extract_version
-        run: |
-          version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r')
-          echo "VERSION=$version" >> $GITHUB_ENV
 
 
-      # 7. Auto-Increment Version
-      - name: Auto-Increment Version
-        shell: bash
-        run: |
-          echo "🔥 Fetching all tags..."
-          git fetch --tags
-
-          version="${{ env.VERSION }}"
-          build=0
-
-          echo "📢 Initial VERSION: $version"
-
-          # Extract base version (removes +build part if exists)
-          base_version=$(echo "$version" | cut -d'+' -f1)
-          echo "🧐 Base Version Extracted: $base_version"
-
-          # Check if base version exists
-          if git tag -l "v$base_version" | grep -q .; then
-            echo "✅ Base version exists. Finding next build number..."
-            
-            # Increment build number until an unused one is found
-            while git tag -l "v$base_version+build$build" | grep -q .; do
-              ((build++))
-            done
-          else
-            echo "❌ Base version does not exist. Using base version as final."
-          fi
-
-          final_version="$base_version+build$build"
-          echo "🎯 Final Computed Version: $final_version"
-
-          echo "VERSION=$final_version" >> $GITHUB_ENV
-
-
-
-      # 8. Package into DMG
+      # 6. Package into DMG
       - name: Package into DMG
         run: |
           APP_NAME="FlutterCraft"
@@ -96,7 +70,7 @@ jobs:
           mkdir -p build/macos/dmg
           hdiutil create -volname "${APP_NAME}" -srcfolder "build/macos/Build/Products/Release/${APP_NAME}.app" -ov -format UDZO "build/macos/dmg/${DMG_NAME}"
 
-      # 9. Upload Release
+      # 7. Upload Release
       - name: Upload Release
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
@@ -105,3 +79,4 @@ jobs:
           tag_name: v${{ env.VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+

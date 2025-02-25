@@ -13,14 +13,26 @@ on:
       - main
 
 jobs:
+  version_manager:
+    uses: ./.github/workflows/version_manager.yml 
+
   build:
     name: Build & Release
     runs-on: ubuntu-22.04
+
+    needs: version_manager 
+    if: ${{ needs.version_manager.outputs.build == 'true' }}
+
 
     steps:
       # 1. Checkout Repository
       - name: Checkout Repository
         uses: actions/checkout@v3
+
+
+      - name: Extract Version
+        run: |
+          echo "VERSION=${{ needs.version_manager.outputs.version }}" >> $GITHUB_ENV
 
       # 2. Setup Flutter
       - name: Set Up Flutter
@@ -29,21 +41,21 @@ jobs:
           flutter-version: '3.27.1'
           channel: 'stable'
 
-      # 4. Install System Dependencies
+      # 3. Install System Dependencies
       - name: Install Linux Dependencies
         run: |
           sudo apt update -y
           sudo apt-get install -y ninja-build libgtk-3-dev libfuse2
 
-      # 5. Install Dependencies
+      # 4. Install Dependencies
       - name: Install Dependencies
         run: flutter pub get
 
-      # 6. Build Linux App
+      # 5. Build Linux App
       - name: Build App
         run: flutter build linux --release
       
-      # 7. Create Desktop File
+      # 6. Create Desktop File
       - name: Create Desktop File
         run: |
           cat > build/linux/x64/release/bundle/fluttercraft_launcher.desktop <<EOF
@@ -60,7 +72,7 @@ jobs:
       - name: Copy Icon
         run: cp assets/icon.png build/linux/x64/release/bundle/
 
-      # 8. Package App as AppImage
+      # 7. Package App as AppImage
       - name: Package App as AppImage
         run: |
           cd build/linux/x64/release/bundle
@@ -72,49 +84,8 @@ jobs:
           ./appimagetool-x86_64.AppImage AppDir fluttercraft_launcher.AppImage
 
 
-      # 9. Extract Version from pubspec.yaml
-      - name: Extract version from pubspec.yaml
-        id: extract_version
-        shell: bash
-        run: |
-          version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r')
-          echo "VERSION=$version" >> $GITHUB_ENV
 
-      # 10. Auto-Increment Version
-      - name: Auto-Increment Version
-        shell: bash
-        run: |
-          echo "🔥 Fetching all tags..."
-          git fetch --tags
-
-          version="${{ env.VERSION }}"
-          build=0
-
-          echo "📢 Initial VERSION: $version"
-
-          # Extract base version (removes +build part if exists)
-          base_version=$(echo "$version" | cut -d'+' -f1)
-          echo "🧐 Base Version Extracted: $base_version"
-
-          # Check if base version exists
-          if git tag -l "v$base_version" | grep -q .; then
-            echo "✅ Base version exists. Finding next build number..."
-            
-            # Increment build number until an unused one is found
-            while git tag -l "v$base_version+build$build" | grep -q .; do
-              ((build++))
-            done
-          else
-            echo "❌ Base version does not exist. Using base version as final."
-          fi
-
-          final_version="$base_version+build$build"
-          echo "🎯 Final Computed Version: $final_version"
-
-          echo "VERSION=$final_version" >> $GITHUB_ENV
-
-
-      # 11. Upload Release
+      # 8. Upload Release
       - name: Upload Release
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
@@ -123,3 +94,4 @@ jobs:
           tag_name: v${{ env.VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+
