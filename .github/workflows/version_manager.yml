@@ -31,6 +31,8 @@ jobs:
       - name: Determine Version and Check Tag Existence
         id: step2
         run: |
+          git fetch --tags
+          
           version="${{ env.VERSION }}"
           echo "📢 Initial VERSION: $version"
 
