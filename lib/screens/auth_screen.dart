@@ -50,11 +50,12 @@ class _AuthScreenState extends State<AuthScreen> with ProtocolListener {
             return Card(
               child: ListTile(
                 leading: CircleAvatar(
+                  backgroundColor: Color.fromARGB(0, 0, 0, 0),
                   backgroundImage: NetworkImage(
-                      'https://crafatar.com/avatars/${account.uuid}'),
+                      'https://crafatar.com/renders/head/${account.uuid}'),
                 ),
                 title: Text(account.username),
-                subtitle: Text(account.accessToken),
+                subtitle: Text(account.username),
                 trailing: IconButton(
                   icon: Icon(Icons.delete),
                   onPressed: () {

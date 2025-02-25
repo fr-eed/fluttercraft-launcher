@@ -92,12 +92,13 @@ class MinecraftAuth {
         'code': code,
         'grant_type': 'authorization_code',
         'redirect_uri': redirectUri,
-        'scope': 'XboxLive.signin offline_access',
+        'scope': 'XboxLive.signin XboxLive.offline_access',
       },
     );
 
     if (response.statusCode != 200) {
-      throw StateError('Failed to get Microsoft token');
+      final body = response.body;
+      throw StateError('Failed to get Microsoft token: $body');
     }
 
     final Map<String, dynamic> data =
