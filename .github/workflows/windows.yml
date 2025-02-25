@@ -54,8 +54,10 @@ jobs:
       - name: Create ZIP Package
         run: |
           cd build/windows/x64/runner/Release
-          $zipFileName = "fluttercraft_launcher.zip"
-          Compress-Archive -Path * -DestinationPath $zipFileName
+          mkdir fluttercraft
+          mv * fluttercraft
+          Compress-Archive -Path fluttercraft -DestinationPath fluttercraft_launcher.zip
+
 
       # 6. Upload Release
       - name: Upload Release

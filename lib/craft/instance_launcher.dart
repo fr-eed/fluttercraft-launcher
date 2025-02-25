@@ -93,7 +93,15 @@ class CraftInstanceLauncher {
     final currentFeatures = CraftFeatureModel({}); // no features
 
     // Generate the classpath by concatenating each library path
-    String classpath = "$jarPath:${getLibPaths().join(":")}";
+
+    final libPathsRelative = getLibPaths().map(p.relative).toList();
+
+    String classpath = "";
+    if (OsType.windows == currentOs.name) {
+      classpath = "$jarPath;${libPathsRelative.join(";")}";
+    } else {
+      classpath = "$jarPath:${libPathsRelative.join(":")}";
+    }
 
     Map<String, String> env = {
       "classpath": classpath,
