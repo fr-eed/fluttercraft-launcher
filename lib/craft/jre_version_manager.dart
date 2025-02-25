@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:path/path.dart' as p;
 
 import 'craft_exports.dart';
+
+import 'package:flutter/services.dart';
 
 class JreVersionManager {
   final String installDir;
@@ -9,9 +13,12 @@ class JreVersionManager {
 
   JreVersionManager({required this.installDir}) {
     // read manifest
+  }
+
+  Future<void> init() async {
+    final manifestStr = await rootBundle.loadString('assets/jre_manifest.json');
     _manifest = JreManifestModel.fromJson(
-        json.decode(File("assets/jre_manifest.json").readAsStringSync())
-            as Map<String, dynamic>);
+        json.decode(manifestStr) as Map<String, dynamic>);
   }
 
   String getRuntimeFolderPath(
@@ -118,8 +125,8 @@ class JreVersionManager {
           codeName: codeName, platform: platform);
     }
 
-    BeaverLog.success(
-        "JRE version ${codeName.name} ${componenInfo.version['name']} for ${platform.name} installed ");
+    unawaited(BeaverLog.success(
+        "JRE version ${codeName.name} ${componenInfo.version['name']} for ${platform.name} installed "));
   }
 
   Future<void> _setExecutablePermissions(String filePath) async {
@@ -148,8 +155,6 @@ class JreVersionManager {
           item.value.executable == true) {
         final downloadPath = p.join(downloadFolder, item.key);
         // chmod his file
-        //BeaverLog.log(
-        //    "Setting executable permissions for ${item.key} for jre version ${codeName.name}");
         await _setExecutablePermissions(downloadPath);
       }
     }

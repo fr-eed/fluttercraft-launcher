@@ -1,3 +1,4 @@
+import 'package:fluttercraft_launcher/cubits/auth_cubit.dart';
 import 'package:path/path.dart' as p;
 
 import 'craft_exports.dart';
@@ -10,11 +11,14 @@ class CraftInstanceLauncher {
 
   final String javaExecutable;
 
+  MinecraftAccount? mcAccount;
+
   CraftInstanceLauncher(
       {required this.manifesto,
       required this.installDir,
       required this.jarPath,
-      required this.javaExecutable});
+      required this.javaExecutable,
+      this.mcAccount});
 
   /// Fill in the arguments with the environment variables.
   List<String> _fillArgs({
@@ -113,12 +117,12 @@ class CraftInstanceLauncher {
           p.join(installDir, "gamedir", "instance0"), // TODO add uuid or smth
 
       // usr
-      "auth_player_name": "FluttCrafter",
-      "auth_uuid": Uuid().v4(),
-      "auth_access_token": Uuid().v4(),
+      "auth_player_name": mcAccount?.username ?? "FlutterCrafter",
+      "auth_uuid": mcAccount?.uuid ?? Uuid().v4(),
+      "auth_access_token": mcAccount?.accessToken ?? Uuid().v4(),
       "clientid": Uuid().v4(),
-      "auth_xuid": Uuid().v4(),
-      "user_type": "mojang",
+      "auth_xuid": mcAccount?.uuid ?? Uuid().v4(),
+      "user_type": "microsoft",
     };
 
     List<String> javaArgs = [];

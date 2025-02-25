@@ -1,10 +1,12 @@
+import 'dart:async';
 import 'dart:ui';
 
-import 'package:fluttercraft_launcher/cubits/instances_cubit.dart';
-import 'package:fluttercraft_launcher/cubits/settings_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../util/beaver.dart';
+import 'package:fluttercraft_launcher/craft/craft_exports.dart';
+import 'package:fluttercraft_launcher/cubits/auth_cubit.dart';
+import 'package:fluttercraft_launcher/cubits/instances_cubit.dart';
+import 'package:fluttercraft_launcher/cubits/settings_cubit.dart';
 
 class PlayScreen extends StatelessWidget {
   const PlayScreen({super.key});
@@ -73,15 +75,64 @@ class GameImage extends StatelessWidget {
           bottom: 16,
           right: 16,
           child: FloatingActionButton.extended(
-            onPressed: () {
-              // Handle launch
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Please login to Microsoft Account first'),
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                  behavior: SnackBarBehavior.fixed,
-                ),
-              );
+            onPressed: () async {
+              if (CraftLauncherState.launcher!.isRunning) {
+                BeaverLog.info('Game is already running');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Game is already running'),
+                    backgroundColor: Theme.of(context).colorScheme.secondary,
+                    behavior: SnackBarBehavior.fixed,
+                  ),
+                );
+                return;
+              }
+              final authState = context.read<AuthCubit>().state;
+              final instanceState = context.read<CraftInstanceCubit>().state;
+
+              if (authState.selectedAccount == null) {
+                /*  ScaffoldMessenger.of(context).showMaterialBanner(MaterialBanner(
+                    content: const Text('Please login'),
+                    actions: [
+                      TextButton(
+                        child: const Text('Login'),
+                        onPressed: () {
+                        Navigator.of(context).pushNamed('/auth');
+                        },
+                      )
+                    ]));*/
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Please login to Microsoft Account first'),
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                    behavior: SnackBarBehavior.fixed,
+                  ),
+                );
+                return;
+              }
+
+              final manifest = CraftLauncherState
+                  .launcher!.manifestManager.versionsManifestV2;
+
+              final craftVersion = (instanceState.selectedInstance?.version ??
+                  manifest!.latest.release);
+
+              unawaited(CraftLauncherState.launcher!
+                  .launch(
+                      craftVersion: craftVersion,
+                      mcAccount: authState.selectedAccount)
+                  .catchError((Object err) async {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to launch game: ${err.toString()}'),
+                      backgroundColor: Theme.of(context).colorScheme.error,
+                      behavior: SnackBarBehavior.fixed,
+                    ),
+                  );
+                }
+                throw err;
+              }));
             },
             icon: const Icon(Icons.play_arrow),
             label: const Text('Launch'),

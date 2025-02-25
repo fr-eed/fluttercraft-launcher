@@ -1,13 +1,16 @@
 // Flutter framework
 import 'dart:io';
 
-import 'package:fluttercraft_launcher/cubits/instances_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fluttercraft_launcher/craft/craft_launcher.dart';
+import 'package:fluttercraft_launcher/cubits/instances_cubit.dart';
 // Navigation
 import 'package:go_router/go_router.dart';
 // State management & persistence
 import 'package:hydrated_bloc/hydrated_bloc.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:protocol_handler/protocol_handler.dart';
 // Window management
@@ -24,6 +27,11 @@ import 'screens/instance_screen.dart';
 import 'screens/play_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/skins_screen.dart';
+
+Future<String> _getDataDir() async {
+  final tmpDir = (await getApplicationDocumentsDirectory()).path;
+  return p.join(tmpDir, "FlutterCraft");
+}
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -96,12 +104,17 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await protocolHandler.register('fluttercraft');
+  final dataDir = await _getDataDir();
+
+  CraftLauncherState.launcher = CraftLauncher(installDir: dataDir);
 
   HydratedBloc.storage = await HydratedStorage.build(
     storageDirectory: HydratedStorageDirectory(
-      (await getTemporaryDirectory()).path,
+      (p.join(dataDir, "storage")),
     ),
   );
+
+  await CraftLauncherState.launcher!.init();
 
   // Initialize the window
   await initializeWindow();
