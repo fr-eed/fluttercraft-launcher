@@ -1,0 +1,90 @@
+name: "Debug"
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - test
+      - main
+  push:
+    branches:
+      - dev
+      - test
+      - main
+
+jobs:
+  build:
+    name: Debug
+    runs-on: ubuntu-22.04
+
+    steps:
+      # 1. Checkout Repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      # 2. Extract Version from pubspec.yaml
+      - name: Extract version from pubspec.yaml
+        id: extract_version
+        shell: bash
+        run: |
+          version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r')
+          echo "VERSION=$version" >> $GITHUB_ENV
+
+      # 3. Debug Check if Tag Exists
+      - name: Ultimate Git Debugger
+        shell: bash
+        run: |
+          echo "🔥 Fetching all tags..."
+          git fetch --tags
+
+          echo "🔍 Current Git Status:"
+          git status
+
+          echo "🔀 Current Branch:"
+          git branch --show-current
+
+          echo "🏷️  All Tags in Repo:"
+          git tag -l | sort -V
+
+          version="${{ env.VERSION }}"
+          build=0
+
+          echo "📢 Initial VERSION: $version"
+
+          # Extract base version (removes +build part if exists)
+          base_version=$(echo "$version" | cut -d'+' -f1)
+          echo "🧐 Base Version Extracted: $base_version"
+
+          echo "🔎 Checking if base version exists..."
+          if git tag -l "v$base_version" | grep -q .; then
+            echo "✅ Tag v$base_version EXISTS in repo!"
+          else
+            echo "❌ Tag v$base_version DOES NOT exist!"
+          fi
+
+          echo "🛠️ Alternative tag check with rev-parse..."
+          if git rev-parse "v$base_version" >/dev/null 2>&1; then
+            echo "✅ rev-parse found v$base_version!"
+          else
+            echo "❌ rev-parse could not find v$base_version!"
+          fi
+
+          echo "🎯 Finding highest build number..."
+          existing_tags=$(git tag -l "v$base_version+*" | sort -V)
+
+          if [ -n "$existing_tags" ]; then
+            echo "📌 Existing build tags:"
+            echo "$existing_tags"
+
+            # Extract highest build number
+            build=$(echo "$existing_tags" | sed -E 's/^v'"$base_version"'\+([0-9]+)$/\1/' | sort -n | tail -1)
+            ((build++))  # Increment build number
+            echo "🚀 Next build number: $build"
+          else
+            echo "🔄 No existing build tags. Starting from 0."
+            build=0
+          fi
+
+          final_version="$base_version+$build"
+          echo "🎯 Final Computed Version: $final_version"
+
+          echo "VERSION=$final_version" >> $GITHUB_ENV
