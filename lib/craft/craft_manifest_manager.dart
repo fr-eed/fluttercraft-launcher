@@ -75,8 +75,10 @@ class CraftManifestManager {
     versionsManifestV2 ??= await downloadVersionManifest();
 
     // find version in manifest
-    final version = versionsManifestV2!.versions
-        .firstWhere((element) => element.id == craftVersion);
+    final version = versionsManifestV2!.versions.firstWhere(
+        (element) => element.id == craftVersion,
+        orElse: () => throw Exception(
+            "Version $craftVersion not found in the version manifest."));
 
     await PDRaDSA.singleDownload(
         PDREntry(version.url, clientManifestPath(craftVersion)));
