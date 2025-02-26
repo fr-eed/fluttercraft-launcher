@@ -77,6 +77,14 @@ class CraftLauncher {
         isRunning = false;
       }));
 
+      unawaited(_runningProcess!.stdout
+          .transform(utf8.decoder)
+          .forEach(BeaverLog.info));
+
+      unawaited(_runningProcess!.stderr
+          .transform(utf8.decoder)
+          .forEach(BeaverLog.error));
+
       return _runningProcess!;
     } catch (e) {
       isRunning = false;

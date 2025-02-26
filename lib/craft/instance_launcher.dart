@@ -94,7 +94,11 @@ class CraftInstanceLauncher {
 
     // Generate the classpath by concatenating each library path
 
-    final libPathsRelative = getLibPaths().map(p.relative).toList();
+    final libPathsRelative = getLibPaths()
+        .map(
+          (e) => p.relative(e, from: installDir),
+        )
+        .toList();
 
     String classpath = "";
     if (OsType.windows == currentOs.name) {
