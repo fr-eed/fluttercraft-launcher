@@ -12,18 +12,17 @@ on:
       - test
       - main
 
-jobs:  
+jobs:
   version_manager:
-    uses: ./.github/workflows/version_manager.yml 
+    uses: ./.github/workflows/version_manager.yml
 
-  build:      
-    name: Build & Release 
+  build:
+    name: Build & Release
     runs-on: windows-latest
 
-    needs: version_manager 
+    needs: version_manager
 
     if: contains(needs.version_manager.outputs.should_build, 'true')
-
 
     steps:
       # 1. Checkout Repository
@@ -39,8 +38,8 @@ jobs:
       - name: Set Up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.1'
-          channel: 'stable'
+          flutter-version: "3.27.1"
+          channel: "stable"
 
       # 3. Install Dependencies
       - name: Install Dependencies
@@ -55,9 +54,8 @@ jobs:
         run: |
           cd build/windows/x64/runner/Release
           mkdir fluttercraft
-          mv * fluttercraft
+          Get-ChildItem -Path . -Exclude fluttercraft | ForEach-Object { Move-Item -Path $_.FullName -Destination fluttercraft -Force }
           Compress-Archive -Path fluttercraft -DestinationPath fluttercraft_launcher.zip
-
 
       # 6. Upload Release
       - name: Upload Release
@@ -68,4 +66,3 @@ jobs:
           tag_name: v${{ env.VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
-
