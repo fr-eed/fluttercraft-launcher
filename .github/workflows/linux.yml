@@ -14,21 +14,19 @@ on:
 
 jobs:
   version_manager:
-    uses: ./.github/workflows/version_manager.yml 
+    uses: ./.github/workflows/version_manager.yml
 
   build:
     name: Build & Release
     runs-on: ubuntu-22.04
 
-    needs: version_manager 
+    needs: version_manager
     if: contains(needs.version_manager.outputs.should_build, 'true')
-
 
     steps:
       # 1. Checkout Repository
       - name: Checkout Repository
         uses: actions/checkout@v3
-
 
       - name: Extract Version
         run: |
@@ -38,8 +36,8 @@ jobs:
       - name: Set Up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.1'
-          channel: 'stable'
+          flutter-version: "3.27.1"
+          channel: "stable"
 
       # 3. Install System Dependencies
       - name: Install Linux Dependencies
@@ -54,7 +52,7 @@ jobs:
       # 5. Build Linux App
       - name: Build App
         run: flutter build linux --release
-      
+
       # 6. Create Desktop File
       - name: Create Desktop File
         run: |
@@ -83,8 +81,6 @@ jobs:
           chmod +x appimagetool-x86_64.AppImage
           ./appimagetool-x86_64.AppImage AppDir fluttercraft_launcher.AppImage
 
-
-
       # 8. Upload Release
       - name: Upload Release
         if: github.ref == 'refs/heads/main'
@@ -94,4 +90,3 @@ jobs:
           tag_name: v${{ env.VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
-
