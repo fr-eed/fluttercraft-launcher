@@ -11,7 +11,6 @@ on:
         description: "Version of the app to build"
         value: ${{ jobs.version_manager.outputs.version }}
 
-
 jobs:
   version_manager:
     runs-on: ubuntu-latest
@@ -32,7 +31,7 @@ jobs:
         id: step2
         run: |
           git fetch --tags
-          
+
           version="${{ env.VERSION }}"
           echo "📢 Initial VERSION: $version"
 
