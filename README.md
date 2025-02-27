@@ -2,6 +2,10 @@
 
 This is FlutterCraft Launcher project
 
+The minimal Minecraft launcher built with Flutter/Dart. It uses Material UI 3, and the idea is to keep it simple while giving users all the needed features to enjoy the game.
+
+![Sakura Light](https://fluttercraft.org/preview/sakura-light.webp)
+
 ## Prerequisites
 
 Before building the project, ensure you have the following installed:
