@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:craft_launcher/craft_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fluttercraft_launcher/craft/craft_exports.dart';
+
 import 'package:fluttercraft_launcher/cubits/auth_cubit.dart';
 import 'package:fluttercraft_launcher/cubits/instances_cubit.dart';
 import 'package:fluttercraft_launcher/cubits/settings_cubit.dart';
+import 'package:mojang_api_repository/mojang_api_repository.dart';
 
 class PlayScreen extends StatelessWidget {
   const PlayScreen({super.key});
@@ -117,10 +119,17 @@ class GameImage extends StatelessWidget {
               final craftVersion = (instanceState.selectedInstance?.version ??
                   manifest!.latest.release);
 
+              final account = authState.selectedAccount!;
+
               unawaited(CraftLauncherState.launcher!
                   .launch(
                       craftVersion: craftVersion,
-                      mcAccount: authState.selectedAccount)
+                      mcAccount: CraftAccountModel(
+                          accessToken: account.accessToken,
+                          clientId: AuthRepository.clientId,
+                          profile: CraftProfileModel(
+                              id: account.profile.id,
+                              name: account.profile.name)))
                   .catchError((Object err) async {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(

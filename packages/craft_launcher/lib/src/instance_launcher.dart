@@ -10,7 +10,7 @@ class CraftInstanceLauncher {
 
   final String javaExecutable;
 
-  MinecraftAccount? mcAccount;
+  CraftAccountModel? mcAccount;
 
   CraftInstanceLauncher(
       {required this.manifesto,

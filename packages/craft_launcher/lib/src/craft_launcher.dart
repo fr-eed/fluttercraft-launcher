@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:craft_launcher/src/models/craft_account.dart';
+
 import 'craft_exports.dart';
 
 class CraftLauncherState {
@@ -34,7 +36,7 @@ class CraftLauncher {
   }
 
   Future<Process> launch(
-      {required String craftVersion, MinecraftAccount? mcAccount}) async {
+      {required String craftVersion, CraftAccountModel? mcAccount}) async {
     isRunning = true;
     try {
       await versionManager.ensureInstallation(craftVersion);

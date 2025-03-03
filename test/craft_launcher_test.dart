@@ -1,5 +1,5 @@
+import 'package:craft_launcher/craft_launcher.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fluttercraft_launcher/craft/craft_exports.dart';
 import 'package:path/path.dart' as p;
 
 /// Checks if any data is lost during serialization

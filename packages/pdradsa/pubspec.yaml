@@ -1,0 +1,14 @@
+name: pdradsa
+description: Parallel Data Retrieval And Download Synchronization Apparatus
+publish_to: none
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+
+dependencies:
+  beaver_log:
+    path: ../beaver_log
+  cupertino_icons: ^1.0.2
+  path: ^1.9.0
+  http: ^1.2.2
+  crypto: ^3.0.6
