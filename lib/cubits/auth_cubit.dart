@@ -55,6 +55,18 @@ class AuthCubit extends HydratedCubit<AuthState> {
     }
   }
 
+  Future<void> handleAuthCallback(Uri uri) async {
+    try {
+      final account = await authRepo.handleAuthCallback(uri);
+      finishAuth([account]);
+    } catch (e) {
+      emit(state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: 'Failed to handle authentication callback: $e',
+      ));
+    }
+  }
+
   void finishAuth(List<MinecraftAccount> accounts) {
     if (accounts.isEmpty) {
       emit(state.copyWith(

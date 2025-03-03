@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:fluttercraft_launcher/cubits/account/auth_cubit.dart';
-
 import 'craft_exports.dart';
 
 class CraftLauncherState {

@@ -13,6 +13,8 @@ dependencies:
     sdk: flutter
   mojang_api_repository:
     path: packages/mojang_api_repository
+  beaver_log:
+    path: packages/beaver_log
   cupertino_icons: ^1.0.2
   file_selector: ^1.0.3
   window_manager: ^0.4.3

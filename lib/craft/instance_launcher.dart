@@ -1,4 +1,3 @@
-import 'package:fluttercraft_launcher/cubits/account/auth_cubit.dart';
 import 'package:path/path.dart' as p;
 
 import 'craft_exports.dart';

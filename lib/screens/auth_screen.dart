@@ -26,7 +26,7 @@ class _AuthScreenState extends State<AuthScreen> with ProtocolListener {
   @override
   void onProtocolUrlReceived(String url) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AuthCubit>().handleAuthCallback(url);
+      context.read<AuthCubit>().handleAuthCallback(Uri.parse(url));
     });
     print('Auth callback received: $url');
   }

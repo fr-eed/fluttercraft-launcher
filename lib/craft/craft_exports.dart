@@ -1,8 +1,9 @@
 export 'dart:convert';
 export 'dart:io';
 
-export 'package:fluttercraft_launcher/util/beaver.dart';
+export 'package:beaver_log/beaver_log.dart';
 export 'package:fluttercraft_launcher/util/parallel_data_retrieval_and_download_synchronization_apparatus.dart';
+export 'package:mojang_api_repository/mojang_api_repository.dart';
 export 'package:uuid/uuid.dart';
 
 export 'craft_launcher.dart';

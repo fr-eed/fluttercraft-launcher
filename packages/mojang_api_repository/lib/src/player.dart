@@ -14,7 +14,6 @@ import 'models/skin.dart';
 
 /// Manages player appearance customizations including skins, capes and models
 class PlayerCustomizationApi {
-
   final String _baseUrl = 'https://api.minecraftservices.com/minecraft/profile';
   // PlayerCustomizationApi(this._baseUrl);
 
@@ -45,7 +44,8 @@ class PlayerCustomizationApi {
 
     if (response.statusCode == 200) {
       final responseData = await response.stream.bytesToString();
-      return MinecraftProfile.fromJson(jsonDecode(responseData) as Map<String, dynamic>);
+      return MinecraftProfile.fromJson(
+          jsonDecode(responseData) as Map<String, dynamic>);
     } else {
       throw Exception('Failed to upload skin: ${response.statusCode}');
     }
@@ -61,13 +61,15 @@ class PlayerCustomizationApi {
       headers: {'Content-Type': 'application/json'},
     );
 
-    return MinecraftProfile.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+    return MinecraftProfile.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>);
   }
 
   /// Hides the currently equipped cape
   Future<MinecraftProfile> hideCape() async {
     final response = await http.delete(Uri.parse('$_baseUrl/capes/active'));
-    return MinecraftProfile.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+    return MinecraftProfile.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>);
   }
 
   /// Changes the player model between classic (Steve) and slim (Alex)
@@ -112,4 +114,5 @@ class PlayerCustomizationApi {
     } catch (e) {
       throw Exception('Failed to write skin file: $e');
     }
+  }
 }
