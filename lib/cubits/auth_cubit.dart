@@ -1,41 +1,6 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'dart:io';
-import '../auth/microsoft_auth.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
-const String _minecraftProfileUrl =
-    'https://api.minecraftservices.com/minecraft/profile';
-
-class MinecraftAccount {
-  final String username;
-  final String uuid;
-  final String accessToken;
-  final DateTime tokenExpiry;
-
-  MinecraftAccount({
-    required this.username,
-    required this.uuid,
-    required this.accessToken,
-    required this.tokenExpiry,
-  });
-
-  bool get isTokenValid => DateTime.now().isBefore(tokenExpiry);
-}
-
-class MinecraftProfile {
-  final String username;
-  final String uuid;
-
-  MinecraftProfile({required this.username, required this.uuid});
-
-  factory MinecraftProfile.fromJson(Map<String, dynamic> json) {
-    return MinecraftProfile(
-      username: json['name'] as String,
-      uuid: json['id'] as String,
-    );
-  }
-}
+import 'package:mojang_api_repository/mojang_api_repository.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
+// import 'dart:io';
 
 enum AuthStatus { initial, authenticating, authenticated, error }
 
@@ -67,10 +32,11 @@ class AuthState {
   }
 }
 
-class AuthCubit extends Cubit<AuthState> {
-  AuthCubit() : super(const AuthState());
+class AuthCubit extends HydratedCubit<AuthState> {
+  final AuthRepository authRepo;
 
-  final mca = MinecraftAuth();
+  AuthCubit({required this.authRepo})
+      : super(const AuthState(status: AuthStatus.initial));
 
   Future<void> startAuth() async {
     emit(state.copyWith(
@@ -79,7 +45,7 @@ class AuthCubit extends Cubit<AuthState> {
     ));
 
     try {
-      await mca.startAuth();
+      await authRepo.startAuth();
       // We don't emit a new state here because we're waiting for the callback
     } catch (e) {
       emit(state.copyWith(
@@ -89,65 +55,31 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  Future<void> handleAuthCallback(String url) async {
-    if (state.status != AuthStatus.authenticating) {
-      return; // Ignore callbacks if we're not expecting them
-    }
-
-    try {
-      final Uri uri = Uri.parse(url);
-      if (uri.scheme == 'fluttercraft' && uri.host == 'auth') {
-        final String token = await mca.handleAuthCallback(uri);
-
-        // Get user profile info using the token
-        final accountInfo = await _fetchMinecraftProfile(token);
-
-        final newAccount = MinecraftAccount(
-          username: accountInfo.username,
-          uuid: accountInfo.uuid,
-          accessToken: token,
-          tokenExpiry: DateTime.now().add(const Duration(hours: 24)),
-        );
-
-        final updatedAccounts = List<MinecraftAccount>.from(state.accounts)
-          ..add(newAccount);
-
-        emit(state.copyWith(
-          status: AuthStatus.authenticated,
-          accounts: updatedAccounts,
-          selectedAccount: newAccount,
-        ));
-      }
-    } catch (e) {
+  void finishAuth(List<MinecraftAccount> accounts) {
+    if (accounts.isEmpty) {
       emit(state.copyWith(
         status: AuthStatus.error,
-        errorMessage: 'Authentication failed: $e',
+        errorMessage: 'No accounts were found after authentication.',
       ));
-    }
-  }
-
-  Future<MinecraftProfile> _fetchMinecraftProfile(String accessToken) async {
-    final response = await http.get(
-      Uri.parse(_minecraftProfileUrl),
-      headers: {
-        'Authorization': 'Bearer $accessToken',
-        'Content-Type': 'application/json',
-      },
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception(
-          'Failed to fetch Minecraft profile: ${response.statusCode}');
+      return;
     }
 
-    final Map<String, dynamic> data =
-        json.decode(response.body) as Map<String, dynamic>;
+    // Merge new accounts with existing ones, avoiding duplicates
+    final existingAccountIds = state.accounts.map((a) => a.profile.id).toSet();
+    final uniqueNewAccounts = accounts
+        .where((a) => !existingAccountIds.contains(a.profile.id))
+        .toList();
+    final mergedAccounts = [...state.accounts, ...uniqueNewAccounts];
 
-    return MinecraftProfile.fromJson(data);
-  }
+    // Select the first account if none is selected
+    final selectedAccount = state.selectedAccount ?? accounts.first;
 
-  void selectAccount(MinecraftAccount account) {
-    emit(state.copyWith(selectedAccount: account));
+    emit(state.copyWith(
+      status: AuthStatus.authenticated,
+      accounts: mergedAccounts,
+      selectedAccount: selectedAccount,
+      errorMessage: null,
+    ));
   }
 
   Future<void> removeAccount(MinecraftAccount account) async {
@@ -163,5 +95,46 @@ class AuthCubit extends Cubit<AuthState> {
       accounts: updatedAccounts,
       selectedAccount: newSelected,
     ));
+  }
+
+  @override
+  AuthState? fromJson(Map<String, dynamic> json) {
+    try {
+      final List<dynamic> accountsJson =
+          (json['accounts'] as List<dynamic>?) ?? [];
+      final List<MinecraftAccount> accounts = accountsJson
+          .map((accountJson) =>
+              MinecraftAccount.fromJson(accountJson as Map<String, dynamic>))
+          .toList();
+
+      MinecraftAccount? selectedAccount;
+      if (json['selectedAccount'] != null) {
+        selectedAccount = MinecraftAccount.fromJson(
+            json['selectedAccount'] as Map<String, dynamic>);
+      }
+
+      return AuthState(
+        status: AuthStatus.values[(json['status'] as int?) ?? 0],
+        accounts: accounts,
+        selectedAccount: selectedAccount,
+        errorMessage: json['errorMessage'] as String?,
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  @override
+  Map<String, dynamic>? toJson(AuthState state) {
+    try {
+      return {
+        'status': state.status.index,
+        'accounts': state.accounts.map((account) => account.toJson()).toList(),
+        'selectedAccount': state.selectedAccount?.toJson(),
+        'errorMessage': state.errorMessage,
+      };
+    } catch (e) {
+      return null;
+    }
   }
 }

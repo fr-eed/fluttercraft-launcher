@@ -1,4 +1,4 @@
-import 'package:fluttercraft_launcher/cubits/auth_cubit.dart';
+import 'package:fluttercraft_launcher/cubits/account/auth_cubit.dart';
 import 'package:path/path.dart' as p;
 
 import 'craft_exports.dart';
@@ -129,11 +129,11 @@ class CraftInstanceLauncher {
           p.join(installDir, "gamedir", "instance0"), // TODO add uuid or smth
 
       // usr
-      "auth_player_name": mcAccount?.username ?? "FlutterCrafter",
-      "auth_uuid": mcAccount?.uuid ?? Uuid().v4(),
+      "auth_player_name": mcAccount?.profile.name ?? "FlutterCrafter",
+      "auth_uuid": mcAccount?.profile.id ?? Uuid().v4(),
       "auth_access_token": mcAccount?.accessToken ?? Uuid().v4(),
       "clientid": Uuid().v4(),
-      "auth_xuid": mcAccount?.uuid ?? Uuid().v4(),
+      "auth_xuid": mcAccount?.profile.id ?? Uuid().v4(),
       "user_type": "microsoft",
     };
 

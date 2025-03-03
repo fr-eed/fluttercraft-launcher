@@ -11,7 +11,6 @@ import 'package:go_router/go_router.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:protocol_handler/protocol_handler.dart';
 // Window management
 import 'package:window_manager/window_manager.dart';
@@ -27,6 +26,8 @@ import 'screens/instance_screen.dart';
 import 'screens/play_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/skins_screen.dart';
+
+import 'package:mojang_api_repository/mojang_api_repository.dart';
 
 Future<String> _getDataDir() async {
   final tmpDir = (await getApplicationDocumentsDirectory()).path;
@@ -127,18 +128,25 @@ class Main extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
+    return MultiRepositoryProvider(
       providers: [
-        BlocProvider<SettingsCubit>(
-          create: (context) => SettingsCubit(),
-        ),
-        BlocProvider<AuthCubit>(
-          create: (context) => AuthCubit(),
-        ),
-        BlocProvider<CraftInstanceCubit>(
-            create: (context) => CraftInstanceCubit()),
+        RepositoryProvider<AuthRepository>(create: (_) => AuthRepository())
       ],
-      child: App(),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<SettingsCubit>(
+            create: (context) => SettingsCubit(),
+          ),
+          BlocProvider<AuthCubit>(
+            create: (context) => AuthCubit(
+              authRepo: context.read<AuthRepository>(),
+            ),
+          ),
+          BlocProvider<CraftInstanceCubit>(
+              create: (context) => CraftInstanceCubit()),
+        ],
+        child: App(),
+      ),
     );
   }
 }

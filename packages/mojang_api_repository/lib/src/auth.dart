@@ -1,11 +1,18 @@
+// Dart
 import 'dart:async';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:protocol_handler/protocol_handler.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../util/beaver.dart';
 
-class MinecraftAuth {
+//Packages
+import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
+
+//Models
+import 'models/account.dart';
+import 'models/profile.dart';
+
+//------------------------------------------------
+
+class AuthRepository {
   // Azure application credentials
   static const String clientId = '342fdc8c-8112-477b-9ea1-1bc1af5aef4e';
   static const String redirectUri = 'fluttercraft://auth';
@@ -21,6 +28,8 @@ class MinecraftAuth {
       'https://xsts.auth.xboxlive.com/xsts/authorize';
   static const String mcAuthUrl =
       'https://api.minecraftservices.com/authentication/login_with_xbox';
+  static const String _minecraftProfileUrl =
+      'https://api.minecraftservices.com/minecraft/profile';
 
   final _authCompleter = Completer<String>();
   Completer<String>? _activeAuthCompleter;
@@ -53,8 +62,27 @@ class MinecraftAuth {
     await launchUrl(authUri, mode: LaunchMode.externalApplication);
   }
 
-  // Processes OAuth callback and completes full authentication chain
-  Future<String> handleAuthCallback(Uri uri) async {
+  Future<MinecraftProfile> _fetchMinecraftProfile(String accessToken) async {
+    final response = await http.get(
+      Uri.parse(_minecraftProfileUrl),
+      headers: {
+        'Authorization': 'Bearer $accessToken',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(
+          'Failed to fetch Minecraft profile: ${response.statusCode}');
+    }
+
+    final Map<String, dynamic> data =
+        json.decode(response.body) as Map<String, dynamic>;
+
+    return MinecraftProfile.fromJson(data);
+  }
+
+  Future<MinecraftAccount> handleAuthCallback(Uri uri) async {
     if (_activeAuthCompleter == null) {
       throw StateError('No active authentication in progress');
     }
@@ -68,6 +96,7 @@ class MinecraftAuth {
       final String msAccessToken = await getMicrosoftToken(code);
       final Map<String, dynamic> xboxData =
           await getXboxLiveToken(msAccessToken);
+
       final Map<String, dynamic> xstsData =
           await getXSTSToken(xboxData['Token'] as String);
 
@@ -75,8 +104,16 @@ class MinecraftAuth {
           xstsData['Token'] as String,
           (xstsData['DisplayClaims']['xui'][0]['uhs'] as String));
 
+      final minecraftProfile = await _fetchMinecraftProfile(minecraftToken);
+
+      final newAccount = MinecraftAccount(
+        profile: minecraftProfile,
+        accessToken: minecraftToken,
+        tokenExpiry: DateTime.now().add(const Duration(hours: 24)),
+      );
+
       _activeAuthCompleter = null;
-      return minecraftToken;
+      return newAccount;
     } catch (e) {
       _activeAuthCompleter = null;
       rethrow;

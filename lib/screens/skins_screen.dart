@@ -1,8 +1,33 @@
-import 'package:flutter/material.dart';
-import 'dart:ui' as ui;
 import 'dart:async';
+import 'dart:ui' as ui;
+import 'package:flutter/material.dart';
+import 'package:file_selector/file_selector.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../cubits/skin_cubit.dart';
 
 class SkinGridScreen extends StatelessWidget {
+  const SkinGridScreen({Key? key}) : super(key: key);
+
+  Future<void> _addSkinFromFile(BuildContext context) async {
+    final XTypeGroup typeGroup = XTypeGroup(
+      label: 'Skin files',
+      extensions: ['png'],
+    );
+
+    final XFile? file = await openFile(
+      acceptedTypeGroups: [typeGroup],
+    );
+
+    if (file != null) {
+      // Get the SkinCubit from the context
+      await context.read<SkinCubit>().addSkin(file);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Added skin: ${file.name}')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     const List<(String, String)> skins = [
@@ -93,7 +118,7 @@ class SkinGridScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          // Add skin logic here
+          _addSkinFromFile(context);
         },
         icon: const Icon(Icons.add),
         label: const Text('Add Skin'),

@@ -3,9 +3,9 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  file_selector_windows
   protocol_handler_windows
   screen_retriever_windows
-  url_launcher_windows
   window_manager
 )
 
