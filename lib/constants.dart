@@ -37,7 +37,8 @@ enum ImageThene {
   spring('Spring', "assets/bg_spring.webp"),
   winter('Winter', "assets/bg_winter.webp"),
   sakura('Sakura', "assets/bg_sakura.webp"),
-  desert('Desert', "assets/bg_desert.webp");
+  desert('Desert', "assets/bg_desert.webp"),
+  gradient('Gradient', "assets/bg_gradient.jpg");
 
   const ImageThene(this.label, this.path);
   final String label;

@@ -8,7 +8,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fluttercraft_launcher/cubits/auth_cubit.dart';
 import 'package:fluttercraft_launcher/cubits/instances_cubit.dart';
 import 'package:fluttercraft_launcher/cubits/settings_cubit.dart';
+import 'package:fluttercraft_launcher/ui/outline_card.dart';
 import 'package:mojang_api_repository/mojang_api_repository.dart';
+
+import '../ui/terminal.dart';
 
 class PlayScreen extends StatelessWidget {
   const PlayScreen({super.key});
@@ -17,16 +20,18 @@ class PlayScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: CustomScrollView(
-        physics: const NeverScrollableScrollPhysics(),
+        physics: const ClampingScrollPhysics(),
         slivers: [
-          const SliverPadding(
+          SliverPadding(
             padding: EdgeInsets.all(16.0),
             sliver: SliverToBoxAdapter(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: 16.0,
                 children: [
                   GameImage(),
-                  SizedBox(height: 16),
                   GameInfoRow(),
+                  TerminalCard(),
                 ],
               ),
             ),
@@ -50,7 +55,7 @@ class GameImage extends StatelessWidget {
               height: 300,
               width: double.infinity,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16.0),
+                borderRadius: BorderRadius.circular(8.0),
                 image: DecorationImage(
                   image: AssetImage(state.selectedImagePath),
                   fit: BoxFit.fitWidth,
@@ -119,17 +124,19 @@ class GameImage extends StatelessWidget {
               final craftVersion = (instanceState.selectedInstance?.version ??
                   manifest!.latest.release);
 
-              final account = authState.selectedAccount!;
+              final account =
+                  authState.getAccountById(authState.selectedAccount!);
 
               unawaited(CraftLauncherState.launcher!
                   .launch(
                       craftVersion: craftVersion,
                       mcAccount: CraftAccountModel(
-                          accessToken: account.accessToken,
-                          clientId: AuthRepository.clientId,
-                          profile: CraftProfileModel(
-                              id: account.profile.id,
-                              name: account.profile.name)))
+                        accessToken: account?.accessToken ?? '',
+                        clientId: AuthRepository.clientId,
+                        profile: CraftProfileModel(
+                            id: account?.profile?.id ?? '',
+                            name: account?.profile?.name ?? ''),
+                      ))
                   .catchError((Object err) async {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -144,7 +151,7 @@ class GameImage extends StatelessWidget {
               }));
             },
             icon: const Icon(Icons.play_arrow),
-            label: const Text('Launch'),
+            label: const Text('Launch Minecraft'),
           ),
         ),
       ],
@@ -245,20 +252,19 @@ class GameInfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: const [
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      spacing: 12,
+      children: [
         Expanded(
-            child: InfoCard(
-                icon: Icons.timer, title: 'Play Time', subtitle: '0h')),
-        SizedBox(width: 8),
+          child: InfoCard(
+              icon: Icons.timer, title: 'Play Time', subtitle: '12.3 hours'),
+        ),
         Expanded(
-            child: InfoCard(
-                icon: Icons.folder,
-                title: 'Open Folder',
-                subtitle: 'Location')),
-        SizedBox(width: 8),
+          child: InfoCard(icon: Icons.folder, title: 'Open Instance Folder'),
+        ),
         Expanded(
-            child: InfoCard(
-                icon: Icons.more_horiz, title: 'Coming Soon', subtitle: '')),
+          child: InfoCard(icon: Icons.more_horiz, title: 'Coming Soon'),
+        )
       ],
     );
   }
@@ -269,30 +275,70 @@ class InfoCard extends StatelessWidget {
   final String title;
   final String subtitle;
 
-  const InfoCard(
-      {super.key,
-      required this.icon,
-      required this.title,
-      required this.subtitle});
+  const InfoCard({
+    super.key,
+    required this.icon,
+    required this.title,
+    this.subtitle = '',
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Icon(icon),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title),
-                Text(subtitle),
-              ],
+    return OutlineCard(
+      child: Row(
+        spacing: 16,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8.0),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outlineVariant,
+                width: 1.0,
+              ),
+              borderRadius: BorderRadius.circular(4.0),
             ),
-          ],
-        ),
+            child: Icon(icon, size: 21),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(title),
+              if (subtitle.isNotEmpty) Text(subtitle),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class TerminalCard extends StatelessWidget {
+  const TerminalCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlineCard(
+      child: Column(
+        spacing: 12.0,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Terminal output',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          TerminalOutput(
+            lines: [
+              'Starting game...',
+              'Downloading assets...',
+              'Loading...',
+              'Game started!',
+            ],
+          ),
+        ],
       ),
     );
   }

@@ -4,6 +4,7 @@ import 'dart:convert';
 
 //Packages
 import 'package:http/http.dart' as http;
+import 'package:uuid/uuid.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 //Models
@@ -31,22 +32,8 @@ class AuthRepository {
   static const String _minecraftProfileUrl =
       'https://api.minecraftservices.com/minecraft/profile';
 
-  final _authCompleter = Completer<String>();
-  Completer<String>? _activeAuthCompleter;
-
-  // Handles initial OAuth callback from Microsoft
-  Future<void> handleAuth(Uri uri) async {
-    if (!_authCompleter.isCompleted &&
-        uri.queryParameters.containsKey('code')) {
-      _authCompleter.complete(uri.queryParameters['code']);
-    }
-  }
-
   // Initiates Microsoft OAuth flow
   Future<void> startAuth() async {
-    _activeAuthCompleter?.completeError('New auth started');
-    _activeAuthCompleter = Completer<String>();
-
     final Uri authUri = Uri.parse(microsoftAuthUrl).replace(queryParameters: {
       'client_id': clientId,
       'response_type': 'code',
@@ -56,7 +43,7 @@ class AuthRepository {
     });
 
     if (!await canLaunchUrl(authUri)) {
-      throw Exception('Could not launch auth URL');
+      throw LaunchException('Could not launch auth URL');
     }
 
     await launchUrl(authUri, mode: LaunchMode.externalApplication);
@@ -82,10 +69,10 @@ class AuthRepository {
     return MinecraftProfile.fromJson(data);
   }
 
-  Future<MinecraftAccount> handleAuthCallback(Uri uri) async {
-    if (_activeAuthCompleter == null) {
-      throw StateError('No active authentication in progress');
-    }
+  Future<MinecraftAccount> handleAuthCallback({
+    required Uri uri,
+  }) async {
+    final String uuid = Uuid().v4();
 
     try {
       if (!uri.queryParameters.containsKey('code')) {
@@ -106,16 +93,16 @@ class AuthRepository {
 
       final minecraftProfile = await _fetchMinecraftProfile(minecraftToken);
 
-      final newAccount = MinecraftAccount(
+      final MinecraftAccount authenticatedAccount = MinecraftAccount(
+        uuid: uuid,
         profile: minecraftProfile,
         accessToken: minecraftToken,
         tokenExpiry: DateTime.now().add(const Duration(hours: 24)),
+        authStatus: AuthStatus.authenticated,
       );
 
-      _activeAuthCompleter = null;
-      return newAccount;
+      return authenticatedAccount;
     } catch (e) {
-      _activeAuthCompleter = null;
       rethrow;
     }
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../ui/outline_list_tile.dart';
 
 class InstancesScreen extends StatefulWidget {
   InstancesScreen({super.key});
@@ -46,17 +47,20 @@ class _InstancesScreenState extends State<InstancesScreen> {
         label: const Text('Create Instance'),
         icon: const Icon(Icons.add),
       ),
-      body: ListView.builder(
-        itemCount: widget.instances.length,
-        itemBuilder: (context, index) {
-          final instance = widget.instances[index];
-          return Card(
-            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: ListTile(
-              leading: Icon(Icons.games),
-              title: Text(instance['name']!),
-              subtitle: Text('${instance['version']!} - ${instance['type']}'),
-              trailing: Row(
+      body: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: ListView.separated(
+          separatorBuilder: (context, index) {
+            return SizedBox(height: 10.0);
+          },
+          itemCount: widget.instances.length,
+          itemBuilder: (context, index) {
+            final instance = widget.instances[index];
+            return OutlineListTile(
+              icon: Icons.games,
+              title: instance['name']!,
+              subtitle: '${instance['version']!} - ${instance['type']}',
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(instance['lastPlayed']!),
@@ -86,12 +90,9 @@ class _InstancesScreenState extends State<InstancesScreen> {
                   ),
                 ],
               ),
-              onTap: () {
-                // Handle instance selection
-              },
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

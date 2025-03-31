@@ -39,7 +39,7 @@ class SkinGridScreen extends StatelessWidget {
 
     return Scaffold(
       body: GridView.builder(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(16.0),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 5,
           crossAxisSpacing: 10,
@@ -55,9 +55,9 @@ class SkinGridScreen extends StatelessWidget {
                 color: Colors.transparent,
                 shape: RoundedRectangleBorder(
                   side: BorderSide(
-                      color: Theme.of(context).brightness == Brightness.light
-                          ? Colors.grey.shade300
-                          : Colors.grey.shade900),
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                    width: 1,
+                  ),
                   borderRadius: BorderRadius.circular(4.0),
                 ),
                 child: Column(

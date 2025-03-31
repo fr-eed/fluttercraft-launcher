@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import 'constants.dart';
 import 'cubits/settings_cubit.dart';
+import '../ui/theme_brightness_toggle.dart';
 
 class Home extends StatefulWidget {
   final Widget child;
@@ -40,9 +41,8 @@ class _HomeState extends State<Home> {
     final routes = {
       0: '/home',
       1: '/instances',
-      2: '/skins',
-      3: '/auth',
-      4: '/settings',
+      2: '/auth',
+      3: '/settings',
     };
 
     final route = routes[index];
@@ -55,40 +55,57 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return BlocBuilder<SettingsCubit, SettingsState>(
       builder: (context, state) {
-        return Scaffold(
-          appBar: AppBar(),
-          body: Row(
-            children: [
-              NavigationRail(
-                labelType: NavigationRailLabelType.all,
-                onDestinationSelected: _handleNavigation,
-                destinations: const [
-                  NavigationRailDestination(
-                    icon: Icon(Icons.videogame_asset),
-                    label: Text('Home'),
+        return Container(
+          color: Theme.of(context).colorScheme.surface,
+          child: SafeArea(
+            minimum: EdgeInsets.only(
+              top: 32,
+            ),
+            child: Scaffold(
+              body: Row(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        right: BorderSide(
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                          width: 1,
+                        ),
+                      ),
+                    ),
+                    child: NavigationRail(
+                      labelType: NavigationRailLabelType.all,
+                      onDestinationSelected: _handleNavigation,
+                      destinations: const [
+                        NavigationRailDestination(
+                          icon: Icon(Icons.videogame_asset),
+                          label: Text('Home'),
+                        ),
+                        NavigationRailDestination(
+                          icon: Icon(Icons.widgets_outlined),
+                          label: Text('Instances'),
+                        ),
+                        // NavigationRailDestination(
+                        //   icon: Icon(Icons.format_paint),
+                        //   label: Text('Skins'),
+                        // ),
+                        NavigationRailDestination(
+                          icon: Icon(Icons.account_circle),
+                          label: Text('Account'),
+                        ),
+                        NavigationRailDestination(
+                          icon: Icon(Icons.settings),
+                          label: Text('Settings'),
+                        ),
+                      ],
+                      selectedIndex: _selectedIndex,
+                      trailing: NavigationTrailing(),
+                    ),
                   ),
-                  NavigationRailDestination(
-                    icon: Icon(Icons.widgets_outlined),
-                    label: Text('Instances'),
-                  ),
-                  NavigationRailDestination(
-                    icon: Icon(Icons.format_paint),
-                    label: Text('Skins'),
-                  ),
-                  NavigationRailDestination(
-                    icon: Icon(Icons.account_circle),
-                    label: Text('Account'),
-                  ),
-                  NavigationRailDestination(
-                    icon: Icon(Icons.settings),
-                    label: Text('Settings'),
-                  ),
+                  Expanded(child: widget.child),
                 ],
-                selectedIndex: _selectedIndex,
-                trailing: NavigationTrailing(),
               ),
-              Expanded(child: widget.child),
-            ],
+            ),
           ),
         );
       },
@@ -109,42 +126,12 @@ class NavigationTrailing extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _BrightnessButton(),
+              BrightnessButton(),
               _ThemeSelector(),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class _BrightnessButton extends StatelessWidget {
-  const _BrightnessButton({
-    this.showTooltipBelow = true,
-  });
-
-  final bool showTooltipBelow;
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<SettingsCubit, SettingsState>(
-      builder: (context, state) {
-        return Tooltip(
-          preferBelow: showTooltipBelow,
-          message: 'Toggle brightness',
-          child: IconButton(
-            // dark = dark icon because inconsistency with auto brightness
-            icon: state.brightnessMode == BrightnessMode.dark
-                ? const Icon(Icons.dark_mode_outlined)
-                : state.brightnessMode == BrightnessMode.light
-                    ? const Icon(Icons.light_mode_outlined)
-                    : const Icon(Icons.brightness_auto_outlined),
-            onPressed: () =>
-                context.read<SettingsCubit>().cycleBrightnessModes(),
-          ),
-        );
-      },
     );
   }
 }

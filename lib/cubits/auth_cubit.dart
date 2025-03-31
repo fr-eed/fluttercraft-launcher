@@ -1,111 +1,93 @@
-import 'package:mojang_api_repository/mojang_api_repository.dart';
+import 'dart:async';
+import 'package:collection/collection.dart';
+import 'package:craft_launcher/craft_launcher.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
-// import 'dart:io';
-
-enum AuthStatus { initial, authenticating, authenticated, error }
+import 'package:mojang_api_repository/mojang_api_repository.dart';
 
 class AuthState {
-  final AuthStatus status;
   final List<MinecraftAccount> accounts;
-  final MinecraftAccount? selectedAccount;
-  final String? errorMessage;
+  final String? selectedAccount;
 
   const AuthState({
-    this.status = AuthStatus.initial,
     this.accounts = const [],
     this.selectedAccount,
-    this.errorMessage,
   });
 
   AuthState copyWith({
-    AuthStatus? status,
     List<MinecraftAccount>? accounts,
-    MinecraftAccount? selectedAccount,
-    String? errorMessage,
+    String? selectedAccount,
   }) {
     return AuthState(
-      status: status ?? this.status,
       accounts: accounts ?? this.accounts,
       selectedAccount: selectedAccount ?? this.selectedAccount,
-      errorMessage: errorMessage ?? this.errorMessage,
     );
   }
+
+  MinecraftAccount? getAccountById(String id) =>
+      accounts.firstWhereOrNull((account) => account.uuid == id);
 }
 
 class AuthCubit extends HydratedCubit<AuthState> {
   final AuthRepository authRepo;
 
-  AuthCubit({required this.authRepo})
-      : super(const AuthState(status: AuthStatus.initial));
+  AuthCubit({required this.authRepo}) : super(const AuthState());
 
   Future<void> startAuth() async {
-    emit(state.copyWith(
-      status: AuthStatus.authenticating,
-      errorMessage: null,
-    ));
-
     try {
       await authRepo.startAuth();
-      // We don't emit a new state here because we're waiting for the callback
-    } catch (e) {
-      emit(state.copyWith(
-        status: AuthStatus.error,
-        errorMessage: 'Failed to start authentication: $e',
-      ));
+    } catch (error) {
+      BeaverLog.error('Authentication error: $error');
     }
   }
 
-  Future<void> handleAuthCallback(Uri uri) async {
-    try {
-      final account = await authRepo.handleAuthCallback(uri);
-      finishAuth([account]);
-    } catch (e) {
-      emit(state.copyWith(
-        status: AuthStatus.error,
-        errorMessage: 'Failed to handle authentication callback: $e',
-      ));
-    }
-  }
+  Future<void> finishAuth({
+    required Uri uri,
+  }) async {
+    final MinecraftAccount authenticatedAccount =
+        await authRepo.handleAuthCallback(uri: uri);
 
-  void finishAuth(List<MinecraftAccount> accounts) {
-    if (accounts.isEmpty) {
-      emit(state.copyWith(
-        status: AuthStatus.error,
-        errorMessage: 'No accounts were found after authentication.',
-      ));
+    // Check if an account with the same access token already exists
+    final existingAccount = state.accounts.firstWhereOrNull(
+      (account) => account.profile?.id == authenticatedAccount.profile?.id,
+    );
+
+    if (existingAccount != null) {
       return;
     }
 
-    // Merge new accounts with existing ones, avoiding duplicates
-    final existingAccountIds = state.accounts.map((a) => a.profile.id).toSet();
-    final uniqueNewAccounts = accounts
-        .where((a) => !existingAccountIds.contains(a.profile.id))
-        .toList();
-    final mergedAccounts = [...state.accounts, ...uniqueNewAccounts];
-
-    // Select the first account if none is selected
-    final selectedAccount = state.selectedAccount ?? accounts.first;
+    final updatedAccountsList = [...state.accounts, authenticatedAccount];
 
     emit(state.copyWith(
-      status: AuthStatus.authenticated,
-      accounts: mergedAccounts,
-      selectedAccount: selectedAccount,
-      errorMessage: null,
+      accounts: updatedAccountsList,
+      selectedAccount: authenticatedAccount.uuid,
     ));
   }
 
-  Future<void> removeAccount(MinecraftAccount account) async {
-    final updatedAccounts = List<MinecraftAccount>.from(state.accounts)
-      ..remove(account);
+  Future<void> removeAccount(String accountId) async {
+    final MinecraftAccount? account = state.getAccountById(accountId);
+    if (account == null) return;
 
-    MinecraftAccount? newSelected = state.selectedAccount;
-    if (state.selectedAccount == account) {
-      newSelected = updatedAccounts.isNotEmpty ? updatedAccounts.first : null;
+    final updatedAccounts = List<MinecraftAccount>.from(state.accounts)
+      ..removeWhere((a) => a.uuid == accountId);
+
+    String? newSelectedId = state.selectedAccount;
+    if (state.selectedAccount == accountId) {
+      newSelectedId =
+          updatedAccounts.isNotEmpty ? updatedAccounts.first.uuid : null;
     }
 
     emit(state.copyWith(
       accounts: updatedAccounts,
-      selectedAccount: newSelected,
+      selectedAccount: newSelectedId,
+    ));
+  }
+
+  void setActiveAccount(String accountId) {
+    final MinecraftAccount? account = state.getAccountById(accountId);
+    if (account == null) return;
+
+    emit(state.copyWith(
+      selectedAccount: accountId,
     ));
   }
 
@@ -119,19 +101,15 @@ class AuthCubit extends HydratedCubit<AuthState> {
               MinecraftAccount.fromJson(accountJson as Map<String, dynamic>))
           .toList();
 
-      MinecraftAccount? selectedAccount;
-      if (json['selectedAccount'] != null) {
-        selectedAccount = MinecraftAccount.fromJson(
-            json['selectedAccount'] as Map<String, dynamic>);
-      }
+      // Simply get the selectedAccount UUID as a string
+      final String? selectedAccountId = json['selectedAccount'] as String?;
 
       return AuthState(
-        status: AuthStatus.values[(json['status'] as int?) ?? 0],
         accounts: accounts,
-        selectedAccount: selectedAccount,
-        errorMessage: json['errorMessage'] as String?,
+        selectedAccount: selectedAccountId,
       );
     } catch (e) {
+      BeaverLog.error('Error deserializing AuthState: $e');
       return null;
     }
   }
@@ -140,12 +118,11 @@ class AuthCubit extends HydratedCubit<AuthState> {
   Map<String, dynamic>? toJson(AuthState state) {
     try {
       return {
-        'status': state.status.index,
         'accounts': state.accounts.map((account) => account.toJson()).toList(),
-        'selectedAccount': state.selectedAccount?.toJson(),
-        'errorMessage': state.errorMessage,
+        'selectedAccount': state.selectedAccount,
       };
     } catch (e) {
+      BeaverLog.error('Error serializing AuthState: $e');
       return null;
     }
   }

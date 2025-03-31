@@ -157,9 +157,17 @@ class App extends StatelessWidget {
       builder: (context, state) {
         final themeManager = ThemeManager(state, context);
         return MaterialApp.router(
+          debugShowCheckedModeBanner: false,
           theme: ThemeData(
             colorScheme: themeManager.themeColorScheme,
             useMaterial3: true,
+            floatingActionButtonTheme: FloatingActionButtonThemeData(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              elevation: 0,
+              highlightElevation: 0,
+            ),
           ),
           routeInformationProvider: _router.routeInformationProvider,
           routeInformationParser: _router.routeInformationParser,

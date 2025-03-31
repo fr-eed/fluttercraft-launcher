@@ -22,9 +22,18 @@ class SkinsLoaded extends SkinsState {
 }
 
 class SkinCubit extends Cubit<SkinsState> {
-  SkinCubit() : super(SkinsInitial());
+  final PlayerCustomizationApi playerCustomizationApi;
+
+  SkinCubit({required this.playerCustomizationApi}) : super(SkinsInitial());
 
   void changeSkin(String skinPath) {}
 
-  Future<void> addSkin(XFile file) async {}
+  Future<void> addSkin(XFile file) async {
+    await playerCustomizationApi.writeSkinToDirectory(file);
+  }
+
+  Future<void> getSkins() async {
+    final skins = await playerCustomizationApi.getSkinsFromDirectory();
+    // emit(SkinsLoaded(skins));
+  }
 }
